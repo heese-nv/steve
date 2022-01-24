@@ -16,28 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package de.rwth.idsg.steve.utils.mapper;
+package de.rwth.idsg.steve.api.contract;
 
-import com.neovisionaries.i18n.CountryCode;
-import de.rwth.idsg.steve.web.dto.Address;
-import jooq.steve.db.tables.records.AddressRecord;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.jetbrains.annotations.NotNull;
 
-/**
- * @author Sevket Goekay <sevketgokay@gmail.com>
- * @since 23.03.2021
- */
-public class AddressMapper {
+@Schema(title = "Version")
+public class VersionContract {
 
-    public static Address recordToDto(AddressRecord record) {
-        Address address = new Address();
-        if (record != null) {
-            address.setAddressPk(record.getAddressPk());
-            address.setStreet(record.getStreet());
-            address.setHouseNumber(record.getHouseNumber());
-            address.setZipCode(record.getZipCode());
-            address.setCity(record.getCity());
-            address.setCountry(CountryCode.getByCode(record.getCountry()));
-        }
-        return address;
+    private final String app;
+    private final String db;
+
+    @JsonCreator
+    public VersionContract(@NotNull String app, @NotNull String db) {
+        this.app = app;
+        this.db = db;
+    }
+
+    @Schema(title = "Version number.")
+    public String getApp() {
+        return this.app;
+    }
+
+    public String getDb() {
+        return db;
     }
 }
