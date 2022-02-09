@@ -18,7 +18,7 @@
  */
 package de.rwth.idsg.steve.service;
 
-import de.rwth.idsg.steve.mq.message.HeartBeatMessage;
+import de.rwth.idsg.steve.mq.message.HeartBeatEvent;
 import de.rwth.idsg.steve.ocpp.OcppProtocol;
 import de.rwth.idsg.steve.repository.OcppServerRepository;
 import de.rwth.idsg.steve.repository.SettingsRepository;
@@ -220,10 +220,10 @@ public class CentralSystemService16_Service {
         DateTime now = DateTime.now();
         ocppServerRepository.updateChargeboxHeartbeat(chargeBoxIdentity, now);
 
-        HeartBeatMessage event = HeartBeatMessage.builder()
-                                                 .chargePointId(chargeBoxIdentity)
-                                                 .timestamp(now)
-                                                 .build();
+        HeartBeatEvent event = HeartBeatEvent.builder()
+                                             .chargePointId(chargeBoxIdentity)
+                                             .timestamp(now)
+                                             .build();
         applicationEventPublisher.publishEvent(event);
 
         return new HeartbeatResponse().withCurrentTime(now);

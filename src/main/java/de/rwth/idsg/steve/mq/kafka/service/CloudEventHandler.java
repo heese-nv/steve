@@ -15,4 +15,11 @@ public interface CloudEventHandler {
      *         cloud event
      */
     void handleEvent(@NotNull CloudEvent event);
+
+    /**
+     * @param event
+     *         cloud event
+     * @return whether the handler accepts the event
+     */
+    boolean accepts(@NotNull CloudEvent event);
 }

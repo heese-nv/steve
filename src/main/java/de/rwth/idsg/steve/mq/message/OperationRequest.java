@@ -3,11 +3,11 @@ package de.rwth.idsg.steve.mq.message;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Response to an operation initiated by an external system (e.g., the system managing charge points).
+ * Class describing an operation requested by an external system (e.g., system managing charge points).
  *
  * @author ralf.heese
  */
-public interface OperationResponse {
+public interface OperationRequest {
     /**
      * @return ID uniquely identifying the request
      */
@@ -19,4 +19,3 @@ public interface OperationResponse {
      */
     void setRequestId(@NotNull String requestId);
 }
-

@@ -1,6 +1,5 @@
 package de.rwth.idsg.steve.mq.kafka.service.mapper;
 
-import de.rwth.idsg.steve.mq.message.ChargePointMessage;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.rw.CloudEventRWException;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +18,7 @@ public interface CloudEventMessageMapper {
      *         type of the payload
      * @return cloud event
      */
-    @NotNull <T extends ChargePointMessage> CloudEvent toEvent(@NotNull T data) throws CloudEventRWException;
+    @NotNull CloudEvent toEvent(@NotNull Object data) throws CloudEventRWException;
 
     /**
      * Extract an message instance from a cloud event. If the payload of the cloud event is {@code null} then

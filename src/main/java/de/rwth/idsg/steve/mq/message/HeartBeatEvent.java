@@ -13,7 +13,7 @@ import org.joda.time.DateTime;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-public class HeartBeatMessage extends ChargePointMessage {
+public class HeartBeatEvent extends AbstractChargePointEvent {
 
     private DateTime timestamp;
 }

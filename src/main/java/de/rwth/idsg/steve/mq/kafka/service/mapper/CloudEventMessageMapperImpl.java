@@ -4,8 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.rwth.idsg.steve.SteveException;
 import de.rwth.idsg.steve.mq.kafka.service.MessageIdService;
-import de.rwth.idsg.steve.mq.message.ChargePointMessage;
-import de.rwth.idsg.steve.mq.message.RequestMessage;
+import de.rwth.idsg.steve.mq.message.OperationRequest;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
 import io.cloudevents.core.builder.CloudEventBuilder;
@@ -47,7 +46,7 @@ public class CloudEventMessageMapperImpl implements CloudEventMessageMapper {
 
     @NotNull
     @Override
-    public <T extends ChargePointMessage> CloudEvent toEvent(@NotNull T data) throws CloudEventRWException {
+    public CloudEvent toEvent(@NotNull Object data) throws CloudEventRWException {
         try {
             byte[] bytes = mapper.writeValueAsBytes(data);
 
@@ -92,8 +91,8 @@ public class CloudEventMessageMapperImpl implements CloudEventMessageMapper {
                                        .newInstance();
 
             Object message = event.getData() == null ? typeInstance : mapper.readValue(event.getData().toBytes(), typeInstance.getClass());
-            if (message instanceof RequestMessage) {
-                ((RequestMessage) message).setRequestId(requireNotBlank(event.getId(), "Cloud event must have a non-blank ID"));
+            if (message instanceof OperationRequest) {
+                ((OperationRequest) message).setRequestId(requireNotBlank(event.getId(), "Cloud event must have a non-blank ID"));
             }
 
             return message;

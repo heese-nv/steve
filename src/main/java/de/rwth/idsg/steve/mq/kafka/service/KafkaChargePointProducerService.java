@@ -1,7 +1,9 @@
 package de.rwth.idsg.steve.mq.kafka.service;
 
 import de.rwth.idsg.steve.mq.kafka.service.mapper.CloudEventMessageMapper;
-import de.rwth.idsg.steve.mq.message.ChargePointMessage;
+import de.rwth.idsg.steve.mq.message.ChargePointEvent;
+import de.rwth.idsg.steve.mq.message.OperationRequest;
+import de.rwth.idsg.steve.mq.message.OperationResponse;
 import io.cloudevents.CloudEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -37,10 +39,35 @@ public class KafkaChargePointProducerService {
      *         message
      * @return message ID
      */
-    public String send(@NotNull ChargePointMessage message) {
-        log.info("send to topic={}, {}={},", topic, message.getClass().getSimpleName(), message);
+    public String send(@NotNull OperationRequest message) {
+        return send(messageConverter.toEvent(message));
+    }
 
-        CloudEvent event = messageConverter.toEvent(message);
+    /**
+     * Send the message to Kafka.
+     *
+     * @param message
+     *         message
+     * @return message ID
+     */
+    public String send(@NotNull ChargePointEvent message) {
+        return send(messageConverter.toEvent(message));
+    }
+
+    /**
+     * Send the message to Kafka.
+     *
+     * @param message
+     *         message
+     * @return message ID
+     */
+    public String send(@NotNull OperationResponse message) {
+        return send(messageConverter.toEvent(message));
+    }
+
+    public String send(@NotNull CloudEvent event) {
+        log.info("send to topic={}, {}={},", topic, event.getType(), event);
+
         reactiveKafkaProducerTemplate.send(topic, event)
                                      .doOnSuccess(senderResult -> log.info("sent {} offset : {}", event, senderResult.recordMetadata().offset()))
                                      .subscribe();

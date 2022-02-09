@@ -3,8 +3,8 @@ package de.rwth.idsg.steve.api.controller;
 import de.rwth.idsg.steve.api.contract.ChargePointOperationContract;
 import de.rwth.idsg.steve.api.contract.ChargePointOperationResponseContract;
 import de.rwth.idsg.steve.mq.kafka.service.KafkaChargePointProducerService;
-import de.rwth.idsg.steve.mq.message.ChargePointMessage;
-import de.rwth.idsg.steve.mq.message.ClearCacheMessage;
+import de.rwth.idsg.steve.mq.message.AbstractOperationRequest;
+import de.rwth.idsg.steve.mq.message.ClearCacheRequest;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -32,11 +32,11 @@ public class ChargePointApiController {
     @PostMapping(path = "charge_points/send")
     public ResponseEntity<ChargePointOperationResponseContract> test(@RequestBody() ChargePointOperationContract operation) {
 
-        ChargePointMessage message;
+        AbstractOperationRequest message;
 
         switch (operation.getType()) {
             case "clear_cache":
-                message = ClearCacheMessage.builder()
+                message = ClearCacheRequest.builder()
                                            .chargePointId(operation.getChargePointId())
                                            .build();
                 break;

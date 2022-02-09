@@ -12,5 +12,5 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-public class ClearCacheMessage extends ChargePointMessage {
+public class ClearCacheRequest extends AbstractOperationRequest {
 }

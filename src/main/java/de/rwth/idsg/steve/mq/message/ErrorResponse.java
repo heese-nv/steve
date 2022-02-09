@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-public class ErrorResponse extends OperationResponse {
+public class ErrorResponse extends AbstractOperationResponse {
 
     /** Error code provided by the charge point */
     private ErrorCode code;

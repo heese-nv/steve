@@ -12,8 +12,8 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-public class StatusResponse extends AbstractOperationResponse {
+public abstract class ConnectorEvent extends AbstractOperationRequest {
 
-    /** Status received from the charge point. See OCPP specification for the valid status values of a specific task. */
-    private String status;
+    /** ID of the connector (supposed to be greater than 0) */
+    private Integer connectorId;
 }
