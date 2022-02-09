@@ -23,8 +23,11 @@ import de.rwth.idsg.steve.ocpp.ws.custom.WsSessionSelectStrategyEnum;
 import de.rwth.idsg.steve.utils.PropertiesFileLoader;
 import lombok.Builder;
 import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.List;
 
 /**
  * @author Sevket Goekay <goekay@dbis.rwth-aachen.de>
@@ -50,6 +53,8 @@ public enum SteveConfiguration {
     // -------------------------------------------------------------------------
 
     private final String contextPath;
+    @NotNull
+    private final List<String> componentScanPackages;
     private final String steveVersion;
     private final String gitDescribe;
     private final ApplicationProfile profile;
@@ -62,6 +67,7 @@ public enum SteveConfiguration {
         PropertiesFileLoader p = new PropertiesFileLoader("main.properties");
 
         contextPath = sanitizeContextPath(p.getOptionalString("context.path"));
+        componentScanPackages = p.getStringList("component_scan.packages");
         steveVersion = p.getString("steve.version");
         gitDescribe = useFallbackIfNotSet(p.getOptionalString("git.describe"), null);
         profile = ApplicationProfile.fromName(p.getString("profile"));

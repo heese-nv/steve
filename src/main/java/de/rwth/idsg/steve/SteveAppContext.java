@@ -60,7 +60,9 @@ public class SteveAppContext {
 
     public SteveAppContext() {
         springContext = new AnnotationConfigWebApplicationContext();
-        springContext.scan("de.rwth.idsg.steve.config");
+
+        List<String> packages = CONFIG.getComponentScanPackages();
+        springContext.scan(packages.toArray(new String[0]));
     }
 
     public HandlerCollection getHandlers() {

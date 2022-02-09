@@ -18,34 +18,23 @@
  */
 package de.rwth.idsg.steve.service;
 
-import de.rwth.idsg.steve.ocpp.ChargePointService12_Invoker;
-import de.rwth.idsg.steve.ocpp.ChargePointService12_InvokerImpl;
-import de.rwth.idsg.steve.ocpp.OcppVersion;
-import de.rwth.idsg.steve.ocpp.task.ChangeAvailabilityTask;
-import de.rwth.idsg.steve.ocpp.task.ChangeConfigurationTask;
-import de.rwth.idsg.steve.ocpp.task.ClearCacheTask;
-import de.rwth.idsg.steve.ocpp.task.GetDiagnosticsTask;
-import de.rwth.idsg.steve.ocpp.task.RemoteStartTransactionTask;
-import de.rwth.idsg.steve.ocpp.task.RemoteStopTransactionTask;
-import de.rwth.idsg.steve.ocpp.task.ResetTask;
-import de.rwth.idsg.steve.ocpp.task.UnlockConnectorTask;
-import de.rwth.idsg.steve.ocpp.task.UpdateFirmwareTask;
+import de.rwth.idsg.steve.SteveException;
+import de.rwth.idsg.steve.ocpp.*;
+import de.rwth.idsg.steve.ocpp.task.*;
 import de.rwth.idsg.steve.repository.TaskStore;
-import de.rwth.idsg.steve.web.dto.ocpp.ChangeAvailabilityParams;
-import de.rwth.idsg.steve.web.dto.ocpp.ChangeConfigurationParams;
-import de.rwth.idsg.steve.web.dto.ocpp.GetDiagnosticsParams;
-import de.rwth.idsg.steve.web.dto.ocpp.MultipleChargePointSelect;
-import de.rwth.idsg.steve.web.dto.ocpp.RemoteStartTransactionParams;
-import de.rwth.idsg.steve.web.dto.ocpp.RemoteStopTransactionParams;
-import de.rwth.idsg.steve.web.dto.ocpp.ResetParams;
-import de.rwth.idsg.steve.web.dto.ocpp.UnlockConnectorParams;
-import de.rwth.idsg.steve.web.dto.ocpp.UpdateFirmwareParams;
+import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
+import de.rwth.idsg.steve.web.dto.ocpp.*;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Consumer;
 
 /**
  * @author Sevket Goekay <goekay@dbis.rwth-aachen.de>
@@ -53,12 +42,15 @@ import java.util.concurrent.ScheduledExecutorService;
 @Slf4j
 @Service
 @Qualifier("ChargePointService12_Client")
-public class ChargePointService12_Client {
+public class ChargePointService12_Client implements ChargePointServiceClient {
 
-    @Autowired protected ScheduledExecutorService executorService;
-    @Autowired protected TaskStore taskStore;
+    @Autowired
+    protected ScheduledExecutorService executorService;
+    @Autowired
+    protected TaskStore taskStore;
 
-    @Autowired private ChargePointService12_InvokerImpl invoker12;
+    @Autowired
+    private ChargePointService12_InvokerImpl invoker12;
 
     protected OcppVersion getVersion() {
         return OcppVersion.V_12;
@@ -76,7 +68,7 @@ public class ChargePointService12_Client {
         ChangeAvailabilityTask task = new ChangeAvailabilityTask(getVersion(), params);
 
         BackgroundService.with(executorService)
-                         .forEach(task.getParams().getChargePointSelectList())
+                         .forEach(((CommunicationTask<?, ?>) task).getParams().getChargePointSelectList())
                          .execute(c -> getOcpp12Invoker().changeAvailability(c, task));
 
         return taskStore.add(task);
@@ -92,9 +84,10 @@ public class ChargePointService12_Client {
         return taskStore.add(task);
     }
 
-    public int clearCache(MultipleChargePointSelect params) {
+    public int clearCache(@NotNull MultipleChargePointSelect params) {
         ClearCacheTask task = new ClearCacheTask(getVersion(), params);
 
+        executeTask(task);
         BackgroundService.with(executorService)
                          .forEach(task.getParams().getChargePointSelectList())
                          .execute(c -> getOcpp12Invoker().clearCache(c, task));
@@ -139,6 +132,8 @@ public class ChargePointService12_Client {
     public int remoteStartTransaction(RemoteStartTransactionParams params) {
         RemoteStartTransactionTask task = new RemoteStartTransactionTask(getVersion(), params);
 
+        executeTask(task);
+
         BackgroundService.with(executorService)
                          .forFirst(task.getParams().getChargePointSelectList())
                          .execute(c -> getOcpp12Invoker().remoteStartTransaction(c, task));
@@ -166,4 +161,60 @@ public class ChargePointService12_Client {
         return taskStore.add(task);
     }
 
+    /**
+     * Execute a task using the default callback {@link CommunicationTask.DefaultOcppCallback}.
+     *
+     * @param task
+     *         task to be executed
+     * @param <S>
+     *         Type of the parameters of the communication task
+     * @param <RESPONSE>
+     *         Type of response
+     */
+    public <S extends ChargePointSelection, RESPONSE> void executeTask(@NotNull CommunicationTask<S, RESPONSE> task) {
+        executeTask(task, Collections.emptyList());
+    }
+
+    /**
+     * Execute a task using the default callback {@link CommunicationTask.DefaultOcppCallback} and additional callbacks.
+     *
+     * @param task
+     *         task to be executed
+     * @param callbacks
+     *         additional callbacks
+     * @param <S>
+     *         Type of the parameters of the communication task
+     * @param <RESPONSE>
+     *         Type of response
+     */
+    public <S extends ChargePointSelection, RESPONSE> void executeTask(@NotNull CommunicationTask<S, RESPONSE> task, @Nullable List<OcppCallback<RESPONSE>> callbacks) {
+        if (callbacks != null) {
+            callbacks.forEach(task::addCallback);
+        }
+
+        Consumer<ChargePointSelect> consumer;
+        if (task instanceof ClearCacheTask) {
+            consumer = c -> getOcpp12Invoker().clearCache(c, (ClearCacheTask) task);
+        } else {
+            throw new SteveException("Unsupported operation: " + task.getOperationName());
+        }
+
+        executeTask(task, consumer);
+    }
+
+    /**
+     * Execute a task with the specified consumer.
+     *
+     * @param task
+     *         task to be executed
+     * @param <S>
+     *         Type of the parameters of the communication task
+     * @param <RESPONSE>
+     *         Type of response
+     */
+    protected <S extends ChargePointSelection, RESPONSE> void executeTask(@NotNull CommunicationTask<S, RESPONSE> task, @NotNull Consumer<ChargePointSelect> consumer) {
+        BackgroundService.with(executorService)
+                         .forEach(task.getParams().getChargePointSelectList())
+                         .execute(consumer);
+    }
 }

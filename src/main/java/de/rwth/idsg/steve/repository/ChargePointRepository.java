@@ -25,6 +25,8 @@ import de.rwth.idsg.steve.repository.dto.ConnectorStatus;
 import de.rwth.idsg.steve.web.dto.ChargePointForm;
 import de.rwth.idsg.steve.web.dto.ChargePointQueryForm;
 import de.rwth.idsg.steve.web.dto.ConnectorStatusForm;
+import jooq.steve.db.tables.records.ChargeBoxRecord;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -36,6 +38,8 @@ import java.util.Optional;
  * @since 19.08.2014
  */
 public interface ChargePointRepository {
+    @Nullable ChargeBoxRecord findByChargeBoxId(@NotNull String chargeBoxId);
+
     Optional<String> getRegistrationStatus(String chargeBoxId);
     List<ChargePointSelect> getChargePointSelect(OcppProtocol protocol, List<String> inStatusFilter);
     List<String> getChargeBoxIds();

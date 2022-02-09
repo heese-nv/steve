@@ -18,6 +18,7 @@
  */
 package de.rwth.idsg.steve.service;
 
+import de.rwth.idsg.steve.mq.message.HeartBeatMessage;
 import de.rwth.idsg.steve.ocpp.OcppProtocol;
 import de.rwth.idsg.steve.repository.OcppServerRepository;
 import de.rwth.idsg.steve.repository.SettingsRepository;
@@ -27,33 +28,10 @@ import de.rwth.idsg.steve.repository.dto.UpdateChargeboxParams;
 import de.rwth.idsg.steve.repository.dto.UpdateTransactionParams;
 import jooq.steve.db.enums.TransactionStopEventActor;
 import lombok.extern.slf4j.Slf4j;
-import ocpp.cs._2015._10.AuthorizationStatus;
-import ocpp.cs._2015._10.AuthorizeRequest;
-import ocpp.cs._2015._10.AuthorizeResponse;
-import ocpp.cs._2015._10.BootNotificationRequest;
-import ocpp.cs._2015._10.BootNotificationResponse;
-import ocpp.cs._2015._10.ChargePointStatus;
-import ocpp.cs._2015._10.DataTransferRequest;
-import ocpp.cs._2015._10.DataTransferResponse;
-import ocpp.cs._2015._10.DataTransferStatus;
-import ocpp.cs._2015._10.DiagnosticsStatusNotificationRequest;
-import ocpp.cs._2015._10.DiagnosticsStatusNotificationResponse;
-import ocpp.cs._2015._10.FirmwareStatusNotificationRequest;
-import ocpp.cs._2015._10.FirmwareStatusNotificationResponse;
-import ocpp.cs._2015._10.HeartbeatRequest;
-import ocpp.cs._2015._10.HeartbeatResponse;
-import ocpp.cs._2015._10.IdTagInfo;
-import ocpp.cs._2015._10.MeterValuesRequest;
-import ocpp.cs._2015._10.MeterValuesResponse;
-import ocpp.cs._2015._10.RegistrationStatus;
-import ocpp.cs._2015._10.StartTransactionRequest;
-import ocpp.cs._2015._10.StartTransactionResponse;
-import ocpp.cs._2015._10.StatusNotificationRequest;
-import ocpp.cs._2015._10.StatusNotificationResponse;
-import ocpp.cs._2015._10.StopTransactionRequest;
-import ocpp.cs._2015._10.StopTransactionResponse;
+import ocpp.cs._2015._10.*;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -66,12 +44,28 @@ import java.util.Optional;
 @Service
 public class CentralSystemService16_Service {
 
-    @Autowired private OcppServerRepository ocppServerRepository;
-    @Autowired private SettingsRepository settingsRepository;
+    private final OcppServerRepository ocppServerRepository;
+    private final SettingsRepository settingsRepository;
 
-    @Autowired private OcppTagService ocppTagService;
-    @Autowired private NotificationService notificationService;
-    @Autowired private ChargePointHelperService chargePointHelperService;
+    private final OcppTagService ocppTagService;
+    private final NotificationService notificationService;
+    private final ApplicationEventPublisher applicationEventPublisher;
+    private ChargePointHelperService chargePointHelperService;
+
+    public CentralSystemService16_Service(OcppServerRepository ocppServerRepository, SettingsRepository settingsRepository, OcppTagService ocppTagService,
+                                          NotificationService notificationService, ApplicationEventPublisher applicationEventPublisher) {
+        this.ocppServerRepository = ocppServerRepository;
+        this.settingsRepository = settingsRepository;
+        this.ocppTagService = ocppTagService;
+        this.notificationService = notificationService;
+        this.applicationEventPublisher = applicationEventPublisher;
+    }
+
+    // There is a circular dependency between CentralSystemService16_Service and ChargePointHelperService. Autowiring via setting resolved this issue.
+    @Autowired
+    public void setChargePointHelperService(ChargePointHelperService chargePointHelperService) {
+        this.chargePointHelperService = chargePointHelperService;
+    }
 
     public BootNotificationResponse bootNotification(BootNotificationRequest parameters, String chargeBoxIdentity,
                                                      OcppProtocol ocppProtocol) {
@@ -225,6 +219,12 @@ public class CentralSystemService16_Service {
     public HeartbeatResponse heartbeat(HeartbeatRequest parameters, String chargeBoxIdentity) {
         DateTime now = DateTime.now();
         ocppServerRepository.updateChargeboxHeartbeat(chargeBoxIdentity, now);
+
+        HeartBeatMessage event = HeartBeatMessage.builder()
+                                                 .chargePointId(chargeBoxIdentity)
+                                                 .timestamp(now)
+                                                 .build();
+        applicationEventPublisher.publishEvent(event);
 
         return new HeartbeatResponse().withCurrentTime(now);
     }

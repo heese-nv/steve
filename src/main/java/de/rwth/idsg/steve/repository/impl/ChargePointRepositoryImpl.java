@@ -33,16 +33,10 @@ import jooq.steve.db.tables.records.AddressRecord;
 import jooq.steve.db.tables.records.ChargeBoxRecord;
 import lombok.extern.slf4j.Slf4j;
 import ocpp.cs._2015._10.RegistrationStatus;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joda.time.DateTime;
-import org.jooq.Condition;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.Record1;
-import org.jooq.Record5;
-import org.jooq.Result;
-import org.jooq.SelectConditionStep;
-import org.jooq.SelectQuery;
-import org.jooq.Table;
+import org.jooq.*;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +68,14 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
     public ChargePointRepositoryImpl(DSLContext ctx, AddressRepository addressRepository) {
         this.ctx = ctx;
         this.addressRepository = addressRepository;
+    }
+
+    @Override
+    public @Nullable ChargeBoxRecord findByChargeBoxId(@NotNull String chargeBoxId) {
+        return ctx.select()
+                  .from(CHARGE_BOX)
+                  .where(CHARGE_BOX.CHARGE_BOX_ID.eq(chargeBoxId))
+                  .fetchOneInto(ChargeBoxRecord.class);
     }
 
     @Override
@@ -217,8 +219,8 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
         Table<?> t2 = ctx.selectDistinct(t2Pk, t2Ts, t2Status, t2Error)
                          .from(CONNECTOR_STATUS)
                          .join(t1)
-                            .on(CONNECTOR_STATUS.CONNECTOR_PK.equal(t1.field(t1Pk)))
-                            .and(CONNECTOR_STATUS.STATUS_TIMESTAMP.equal(t1.field(t1TsMax)))
+                         .on(CONNECTOR_STATUS.CONNECTOR_PK.equal(t1.field(t1Pk)))
+                         .and(CONNECTOR_STATUS.STATUS_TIMESTAMP.equal(t1.field(t1TsMax)))
                          .asTable("t2");
 
         // https://github.com/RWTH-i5-IDSG/steve/issues/691
@@ -236,17 +238,17 @@ public class ChargePointRepositoryImpl implements ChargePointRepository {
         }
 
         return ctx.select(
-                        CHARGE_BOX.CHARGE_BOX_PK,
-                        CONNECTOR.CHARGE_BOX_ID,
-                        CONNECTOR.CONNECTOR_ID,
-                        t2.field(t2Ts),
-                        t2.field(t2Status),
-                        t2.field(t2Error))
+                          CHARGE_BOX.CHARGE_BOX_PK,
+                          CONNECTOR.CHARGE_BOX_ID,
+                          CONNECTOR.CONNECTOR_ID,
+                          t2.field(t2Ts),
+                          t2.field(t2Status),
+                          t2.field(t2Error))
                   .from(t2)
                   .join(CONNECTOR)
-                        .on(CONNECTOR.CONNECTOR_PK.eq(t2.field(t2Pk)))
+                  .on(CONNECTOR.CONNECTOR_PK.eq(t2.field(t2Pk)))
                   .join(CHARGE_BOX)
-                        .on(CHARGE_BOX.CHARGE_BOX_ID.eq(CONNECTOR.CHARGE_BOX_ID))
+                  .on(CHARGE_BOX.CHARGE_BOX_ID.eq(CONNECTOR.CHARGE_BOX_ID))
                   .where(chargeBoxCondition, statusCondition)
                   .orderBy(t2.field(t2Ts).desc())
                   .fetch()

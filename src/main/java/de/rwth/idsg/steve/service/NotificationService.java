@@ -47,7 +47,11 @@ import static java.lang.String.format;
 @Service
 public class NotificationService {
 
-    @Autowired private MailService mailService;
+    private final MailService mailService;
+
+    public NotificationService(MailService mailService) {
+        this.mailService = mailService;
+    }
 
     public void ocppStationBooted(String chargeBoxId, Optional<RegistrationStatus> status) {
         if (isDisabled(OcppStationBooted)) {

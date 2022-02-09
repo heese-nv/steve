@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
+import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -51,11 +52,7 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
 import javax.annotation.PreDestroy;
 import javax.validation.Validator;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static de.rwth.idsg.steve.SteveConfiguration.CONFIG;
 
@@ -137,7 +134,7 @@ public class BeanConfiguration implements WebMvcConfigurer {
     @Bean
     public ScheduledExecutorService scheduledExecutorService() {
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("SteVe-Executor-%d")
-                                                                .build();
+                .build();
 
         executor = new ScheduledThreadPoolExecutor(5, threadFactory);
         return executor;

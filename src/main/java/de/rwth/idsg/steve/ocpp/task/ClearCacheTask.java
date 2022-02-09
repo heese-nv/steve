@@ -22,6 +22,7 @@ import de.rwth.idsg.steve.ocpp.CommunicationTask;
 import de.rwth.idsg.steve.ocpp.OcppCallback;
 import de.rwth.idsg.steve.ocpp.OcppVersion;
 import de.rwth.idsg.steve.web.dto.ocpp.MultipleChargePointSelect;
+import org.jetbrains.annotations.NotNull;
 
 import javax.xml.ws.AsyncHandler;
 
@@ -31,7 +32,7 @@ import javax.xml.ws.AsyncHandler;
  */
 public class ClearCacheTask extends CommunicationTask<MultipleChargePointSelect, String> {
 
-    public ClearCacheTask(OcppVersion ocppVersion, MultipleChargePointSelect params) {
+    public ClearCacheTask(@NotNull OcppVersion ocppVersion, @NotNull MultipleChargePointSelect params) {
         super(ocppVersion, params);
     }
 

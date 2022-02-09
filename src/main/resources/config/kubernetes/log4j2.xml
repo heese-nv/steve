@@ -17,6 +17,7 @@
         <AsyncLogger name="org.jooq.Constants" level="WARN"/>
 
         <AsyncLogger name="org.apache.cxf" level="INFO"/>
+        <AsyncLogger name="org.apache.kafka" level="INFO"/>
         <AsyncLogger name="org.eclipse.jetty" level="INFO"/>
         <AsyncLogger name="com.zaxxer.hikari" level="INFO"/>
         <AsyncLogger name="org.springframework" level="INFO"/>

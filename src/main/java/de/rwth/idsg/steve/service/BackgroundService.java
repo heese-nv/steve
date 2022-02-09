@@ -47,7 +47,7 @@ public class BackgroundService {
     }
 
     public interface Runner {
-        void execute(Consumer<ChargePointSelect> consumer);
+        Runner execute(Consumer<ChargePointSelect> consumer);
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -55,8 +55,9 @@ public class BackgroundService {
         private final ChargePointSelect cps;
 
         @Override
-        public void execute(Consumer<ChargePointSelect> consumer) {
+        public Runner execute(Consumer<ChargePointSelect> consumer) {
             executorService.execute(() -> consumer.accept(cps));
+            return null;
         }
     }
 
@@ -65,8 +66,9 @@ public class BackgroundService {
         private final List<ChargePointSelect> list;
 
         @Override
-        public void execute(Consumer<ChargePointSelect> consumer) {
+        public Runner execute(Consumer<ChargePointSelect> consumer) {
             executorService.execute(() -> list.forEach(consumer));
+            return null;
         }
     }
 }

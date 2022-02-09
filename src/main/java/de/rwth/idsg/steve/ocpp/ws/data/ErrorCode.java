@@ -39,7 +39,7 @@ public enum ErrorCode {
     // Payload is syntactically correct but at least one field contains an invalid value
     PropertyConstraintViolation,
     // Payload for Action is syntactically correct but at least one of the fields violates occurence constraints
-    OccurenceConstraintViolation,
+    OccurrenceConstraintViolation,
     // Payload for Action is syntactically correct but at least one of the fields violates data type constraints
     // (e.g. “somestring”: 12)
     TypeConstraintViolation,

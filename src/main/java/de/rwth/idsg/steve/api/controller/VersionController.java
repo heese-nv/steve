@@ -35,7 +35,7 @@ import static de.rwth.idsg.steve.SteveConfiguration.CONFIG;
  * @author ralf.heese
  */
 @RestController
-@OpenAPIDefinition(info = @Info(title = "API Examples", version = "1.0"), tags = @Tag(name = "Operations"))
+@OpenAPIDefinition(info = @Info(title = "System", version = "1.0"), tags = @Tag(name = "System"))
 @RequestMapping(path = ApiPaths.API_V1)
 public class VersionController {
 
