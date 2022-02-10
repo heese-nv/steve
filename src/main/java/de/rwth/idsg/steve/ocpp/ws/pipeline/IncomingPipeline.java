@@ -18,11 +18,7 @@
  */
 package de.rwth.idsg.steve.ocpp.ws.pipeline;
 
-import de.rwth.idsg.steve.ocpp.ws.data.CommunicationContext;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonCall;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonError;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonMessage;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonResult;
+import de.rwth.idsg.steve.ocpp.ws.data.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,9 +34,9 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class IncomingPipeline implements Consumer<CommunicationContext> {
 
-    private final Serializer serializer = Serializer.INSTANCE;
     private final Sender sender = Sender.INSTANCE;
 
+    private final Serializer serializer;
     private final Deserializer deserializer;
     private final AbstractCallHandler handler;
 

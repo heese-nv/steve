@@ -23,15 +23,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.rwth.idsg.steve.SteveException;
+import de.rwth.idsg.steve.mq.message.OcppJsonMessageEvent;
 import de.rwth.idsg.steve.ocpp.ws.ErrorFactory;
 import de.rwth.idsg.steve.ocpp.ws.JsonObjectMapper;
-import de.rwth.idsg.steve.ocpp.ws.data.CommunicationContext;
-import de.rwth.idsg.steve.ocpp.ws.data.MessageType;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonCall;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonError;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonMessage;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonResult;
+import de.rwth.idsg.steve.ocpp.ws.data.*;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -44,15 +42,17 @@ import java.util.function.Consumer;
  * @author Sevket Goekay <goekay@dbis.rwth-aachen.de>
  * @since 17.03.2015
  */
+@RequiredArgsConstructor
 @Slf4j
-public enum Serializer implements Consumer<CommunicationContext> {
-    INSTANCE;
+public class Serializer implements Consumer<CommunicationContext> {
 
     private final ObjectMapper mapper = JsonObjectMapper.INSTANCE.getMapper();
+    private final ApplicationEventPublisher publisher;
 
     @Override
     public void accept(CommunicationContext context) {
         OcppJsonMessage message = context.getOutgoingMessage();
+        publishOcppMessage(context.getChargeBoxId(), message);
 
         ArrayNode str;
         MessageType messageType = message.getMessageType();
@@ -149,5 +149,23 @@ public enum Serializer implements Consumer<CommunicationContext> {
                      .add(error.getErrorCode().name())
                      .add(description)
                      .add(detailsNode);
+    }
+
+    /**
+     * Publish the OCPP message as Spring event
+     *
+     * @param chargeBoxId
+     *         charge box ID
+     * @param message
+     *         OCPP message
+     */
+    private void publishOcppMessage(String chargeBoxId, OcppJsonMessage message) {
+        if (publisher != null) {
+            OcppJsonMessageEvent event = OcppJsonMessageEvent.builder()
+                                                             .chargePointId(chargeBoxId)
+                                                             .message(message)
+                                                             .build();
+            publisher.publishEvent(event);
+        }
     }
 }

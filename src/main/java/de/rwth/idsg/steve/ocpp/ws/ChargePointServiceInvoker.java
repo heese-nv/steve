@@ -30,8 +30,6 @@ import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.UUID;
-
 /**
  * @author Sevket Goekay <goekay@dbis.rwth-aachen.de>
  * @since 20.03.2015
@@ -54,7 +52,7 @@ public class ChargePointServiceInvoker {
         } catch (Exception e) {
             log.error("Exception occurred", e);
             // Outgoing call failed due to technical problems. Pass the exception to handler to inform the user
-            task.defaultCallback().failed(chargeBoxId, e);
+            task.getCallbackList().forEach(c -> c.failed(chargeBoxId, e));
         }
     }
 

@@ -28,18 +28,9 @@ import de.rwth.idsg.steve.ocpp.ws.FutureResponseContextStore;
 import de.rwth.idsg.steve.ocpp.ws.pipeline.AbstractCallHandler;
 import de.rwth.idsg.steve.ocpp.ws.pipeline.Deserializer;
 import de.rwth.idsg.steve.ocpp.ws.pipeline.IncomingPipeline;
-import lombok.RequiredArgsConstructor;
-import ocpp.cs._2015._10.AuthorizeRequest;
-import ocpp.cs._2015._10.BootNotificationRequest;
-import ocpp.cs._2015._10.DataTransferRequest;
-import ocpp.cs._2015._10.DiagnosticsStatusNotificationRequest;
-import ocpp.cs._2015._10.FirmwareStatusNotificationRequest;
-import ocpp.cs._2015._10.HeartbeatRequest;
-import ocpp.cs._2015._10.MeterValuesRequest;
-import ocpp.cs._2015._10.StartTransactionRequest;
-import ocpp.cs._2015._10.StatusNotificationRequest;
-import ocpp.cs._2015._10.StopTransactionRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import de.rwth.idsg.steve.ocpp.ws.pipeline.Serializer;
+import ocpp.cs._2015._10.*;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -51,13 +42,21 @@ import javax.annotation.PostConstruct;
 @Component
 public class Ocpp16WebSocketEndpoint extends AbstractWebSocketEndpoint {
 
-    @Autowired private CentralSystemService16_SoapServer server;
-    @Autowired private FutureResponseContextStore futureResponseContextStore;
+    private final CentralSystemService16_SoapServer server;
+    private final FutureResponseContextStore futureResponseContextStore;
+    private final ApplicationEventPublisher publisher;
+
+    public Ocpp16WebSocketEndpoint(CentralSystemService16_SoapServer server, FutureResponseContextStore futureResponseContextStore, ApplicationEventPublisher publisher) {
+        this.server = server;
+        this.futureResponseContextStore = futureResponseContextStore;
+        this.publisher = publisher;
+    }
 
     @PostConstruct
     public void init() {
-        Deserializer deserializer = new Deserializer(futureResponseContextStore, Ocpp16TypeStore.INSTANCE);
-        IncomingPipeline pipeline = new IncomingPipeline(deserializer, new Ocpp16CallHandler(server));
+        Deserializer deserializer = new Deserializer(futureResponseContextStore, Ocpp16TypeStore.INSTANCE, publisher);
+        Serializer serializer = new Serializer(publisher);
+        IncomingPipeline pipeline = new IncomingPipeline(serializer, deserializer, new Ocpp16CallHandler(server, publisher));
         super.init(pipeline);
     }
 
@@ -66,10 +65,14 @@ public class Ocpp16WebSocketEndpoint extends AbstractWebSocketEndpoint {
         return OcppVersion.V_16;
     }
 
-    @RequiredArgsConstructor
     private static class Ocpp16CallHandler extends AbstractCallHandler {
 
         private final CentralSystemService16_SoapServer server;
+
+        public Ocpp16CallHandler(CentralSystemService16_SoapServer server, ApplicationEventPublisher publisher) {
+            super();
+            this.server = server;
+        }
 
         @Override
         protected ResponseType dispatch(RequestType params, String chargeBoxId) {

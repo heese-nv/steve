@@ -23,6 +23,7 @@ import de.rwth.idsg.ocpp.jaxb.ResponseType;
 import de.rwth.idsg.steve.ocpp.ws.ErrorFactory;
 import de.rwth.idsg.steve.ocpp.ws.data.CommunicationContext;
 import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonCall;
+import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonMessage;
 import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,21 +40,22 @@ public abstract class AbstractCallHandler implements Consumer<CommunicationConte
     @Override
     public void accept(CommunicationContext context) {
         OcppJsonCall call = (OcppJsonCall) context.getIncomingMessage();
-        String messageId = call.getMessageId();
 
-        ResponseType response;
+        String messageId = call.getMessageId();
+        OcppJsonMessage message;
         try {
+            ResponseType response;
             response = dispatch(call.getPayload(), context.getChargeBoxId());
+            OcppJsonResult result = new OcppJsonResult();
+            result.setPayload(response);
+            result.setMessageId(messageId);
+            message = result;
         } catch (Exception e) {
             log.error("Exception occurred", e);
-            context.setOutgoingMessage(ErrorFactory.payloadProcessingError(messageId, e.getMessage()));
-            return;
+            message = ErrorFactory.payloadProcessingError(messageId, e.getMessage());
         }
 
-        OcppJsonResult result = new OcppJsonResult();
-        result.setPayload(response);
-        result.setMessageId(messageId);
-        context.setOutgoingMessage(result);
+        context.setOutgoingMessage(message);
     }
 
     protected abstract ResponseType dispatch(RequestType params, String chargeBoxId);

@@ -2,6 +2,7 @@ package de.rwth.idsg.steve.mq.kafka.service;
 
 import de.rwth.idsg.steve.mq.kafka.service.mapper.CloudEventMessageMapper;
 import de.rwth.idsg.steve.mq.message.ChargePointEvent;
+import de.rwth.idsg.steve.mq.message.OcppJsonMessageEvent;
 import de.rwth.idsg.steve.mq.message.OperationRequest;
 import de.rwth.idsg.steve.mq.message.OperationResponse;
 import io.cloudevents.CloudEvent;
@@ -65,10 +66,25 @@ public class KafkaChargePointProducerService {
         return send(messageConverter.toEvent(message));
     }
 
+    /**
+     * Send the OCPP message to Kafka.
+     *
+     * @param message
+     *         message
+     * @return message ID
+     */
+    public String send(@NotNull OcppJsonMessageEvent message) {
+        return send(topic + "-raw", messageConverter.toEvent(message));
+    }
+
     public String send(@NotNull CloudEvent event) {
-        reactiveKafkaProducerTemplate.send(topic, event)
+        return send(topic, event);
+    }
+
+    public String send(@NotNull String targetTopic, @NotNull CloudEvent event) {
+        reactiveKafkaProducerTemplate.send(targetTopic, event)
                                      .doOnSuccess(senderResult -> log.info("SENT topic={}, offset={}: id={}, type={}, source={}, data={} ",
-                                             topic,
+                                             targetTopic,
                                              senderResult.recordMetadata().offset(),
                                              event.getId(),
                                              event.getType(),

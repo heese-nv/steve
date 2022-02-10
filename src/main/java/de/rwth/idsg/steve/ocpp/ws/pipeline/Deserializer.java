@@ -25,19 +25,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.rwth.idsg.ocpp.jaxb.RequestType;
 import de.rwth.idsg.ocpp.jaxb.ResponseType;
 import de.rwth.idsg.steve.SteveException;
+import de.rwth.idsg.steve.mq.message.OcppJsonMessageEvent;
 import de.rwth.idsg.steve.ocpp.ws.ErrorFactory;
 import de.rwth.idsg.steve.ocpp.ws.FutureResponseContextStore;
 import de.rwth.idsg.steve.ocpp.ws.JsonObjectMapper;
 import de.rwth.idsg.steve.ocpp.ws.TypeStore;
-import de.rwth.idsg.steve.ocpp.ws.data.CommunicationContext;
-import de.rwth.idsg.steve.ocpp.ws.data.ErrorCode;
-import de.rwth.idsg.steve.ocpp.ws.data.FutureResponseContext;
-import de.rwth.idsg.steve.ocpp.ws.data.MessageType;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonCall;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonError;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonResult;
+import de.rwth.idsg.steve.ocpp.ws.data.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.IOException;
 import java.util.function.Consumer;
@@ -56,6 +52,7 @@ public class Deserializer implements Consumer<CommunicationContext> {
 
     private final FutureResponseContextStore futureResponseContextStore;
     private final TypeStore typeStore;
+    private final ApplicationEventPublisher publisher;
 
     /**
      * Parsing with streaming API is cumbersome, but only it allows to parse the String step for step
@@ -138,6 +135,7 @@ public class Deserializer implements Consumer<CommunicationContext> {
         call.setPayload(req);
 
         context.setIncomingMessage(call);
+        publishOcppMessage(context.getChargeBoxId(), call);
     }
 
     /**
@@ -168,6 +166,7 @@ public class Deserializer implements Consumer<CommunicationContext> {
 
         context.setIncomingMessage(result);
         context.createResultHandler(responseContext.getTask());
+        publishOcppMessage(context.getChargeBoxId(), result);
     }
 
     /**
@@ -220,6 +219,24 @@ public class Deserializer implements Consumer<CommunicationContext> {
 
         context.setIncomingMessage(error);
         context.createErrorHandler(responseContext.getTask());
+        publishOcppMessage(context.getChargeBoxId(), error);
     }
 
+    /**
+     * Publish the OCPP message as Spring event
+     *
+     * @param chargeBoxId
+     *         charge box ID
+     * @param message
+     *         OCPP message
+     */
+    private void publishOcppMessage(String chargeBoxId, OcppJsonMessage message) {
+        if (publisher != null) {
+            OcppJsonMessageEvent event = OcppJsonMessageEvent.builder()
+                                                             .chargePointId(chargeBoxId)
+                                                             .message(message)
+                                                             .build();
+            publisher.publishEvent(event);
+        }
+    }
 }

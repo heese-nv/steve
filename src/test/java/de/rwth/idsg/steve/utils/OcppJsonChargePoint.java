@@ -27,22 +27,12 @@ import de.rwth.idsg.ocpp.jaxb.ResponseType;
 import de.rwth.idsg.steve.SteveException;
 import de.rwth.idsg.steve.ocpp.OcppVersion;
 import de.rwth.idsg.steve.ocpp.ws.JsonObjectMapper;
-import de.rwth.idsg.steve.ocpp.ws.data.CommunicationContext;
-import de.rwth.idsg.steve.ocpp.ws.data.ErrorCode;
-import de.rwth.idsg.steve.ocpp.ws.data.MessageType;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonCall;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonError;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonResponse;
-import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonResult;
+import de.rwth.idsg.steve.ocpp.ws.data.*;
 import de.rwth.idsg.steve.ocpp.ws.pipeline.Serializer;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.StatusCode;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
-import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.eclipse.jetty.websocket.api.annotations.*;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
 
@@ -148,7 +138,8 @@ public class OcppJsonChargePoint {
         CommunicationContext ctx = new CommunicationContext(null, chargeBoxId);
         ctx.setOutgoingMessage(call);
 
-        Serializer.INSTANCE.accept(ctx);
+        Serializer serializer = new Serializer(null);
+        serializer.accept(ctx);
 
         ResponseContext resCtx = new ResponseContext(ctx.getOutgoingString(), responseClass, responseHandler, errorHandler);
         responseContextMap.put(messageId, resCtx);

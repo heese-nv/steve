@@ -22,6 +22,7 @@ import de.rwth.idsg.steve.ocpp.ws.FutureResponseContextStore;
 import de.rwth.idsg.steve.ocpp.ws.data.CommunicationContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
@@ -39,8 +40,9 @@ public class OutgoingCallPipeline implements Consumer<CommunicationContext> {
     private final Consumer<CommunicationContext> chainedConsumers;
 
     @Autowired
-    public OutgoingCallPipeline(FutureResponseContextStore store) {
-        chainedConsumers = OutgoingCallPipeline.start(Serializer.INSTANCE)
+    public OutgoingCallPipeline(FutureResponseContextStore store, ApplicationEventPublisher publisher) {
+        Serializer serializer = new Serializer(publisher);
+        chainedConsumers = OutgoingCallPipeline.start(serializer)
                                                .andThen(Sender.INSTANCE)
                                                .andThen(saveInStore(store));
     }
@@ -54,8 +56,8 @@ public class OutgoingCallPipeline implements Consumer<CommunicationContext> {
         return context -> {
             // All went well, and the call is sent. Store the response context for later lookup.
             store.add(context.getSession(),
-                      context.getOutgoingMessage().getMessageId(),
-                      context.getFutureResponseContext());
+                    context.getOutgoingMessage().getMessageId(),
+                    context.getFutureResponseContext());
         };
     }
 

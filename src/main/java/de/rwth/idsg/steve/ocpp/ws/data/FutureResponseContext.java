@@ -32,6 +32,6 @@ import lombok.Setter;
 @Setter
 @RequiredArgsConstructor
 public class FutureResponseContext {
-    private final CommunicationTask task;
+    private final CommunicationTask<?, ?> task;
     private final Class<? extends ResponseType> responseClass;
 }

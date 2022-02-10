@@ -20,15 +20,7 @@ package de.rwth.idsg.steve.ocpp;
 
 import de.rwth.idsg.steve.ocpp.soap.ClientProvider;
 import de.rwth.idsg.steve.ocpp.soap.ClientProviderWithCache;
-import de.rwth.idsg.steve.ocpp.task.ChangeAvailabilityTask;
-import de.rwth.idsg.steve.ocpp.task.ChangeConfigurationTask;
-import de.rwth.idsg.steve.ocpp.task.ClearCacheTask;
-import de.rwth.idsg.steve.ocpp.task.GetDiagnosticsTask;
-import de.rwth.idsg.steve.ocpp.task.RemoteStartTransactionTask;
-import de.rwth.idsg.steve.ocpp.task.RemoteStopTransactionTask;
-import de.rwth.idsg.steve.ocpp.task.ResetTask;
-import de.rwth.idsg.steve.ocpp.task.UnlockConnectorTask;
-import de.rwth.idsg.steve.ocpp.task.UpdateFirmwareTask;
+import de.rwth.idsg.steve.ocpp.task.*;
 import de.rwth.idsg.steve.ocpp.ws.ChargePointServiceInvoker;
 import de.rwth.idsg.steve.ocpp.ws.ocpp12.Ocpp12TypeStore;
 import de.rwth.idsg.steve.ocpp.ws.ocpp12.Ocpp12WebSocketEndpoint;
@@ -135,7 +127,7 @@ public class ChargePointService12_InvokerImpl implements ChargePointService12_In
         }
     }
 
-    private void runPipeline(ChargePointSelect cp, CommunicationTask task) {
+    private void runPipeline(ChargePointSelect cp, CommunicationTask<?, ?> task) {
         wsHelper.runPipeline(cp, task);
     }
 

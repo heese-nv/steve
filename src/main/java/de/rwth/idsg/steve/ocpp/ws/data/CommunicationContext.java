@@ -24,6 +24,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.web.socket.WebSocketSession;
 
 import javax.xml.ws.Response;
@@ -44,13 +45,18 @@ public class CommunicationContext {
     private final WebSocketSession session;
     private final String chargeBoxId;
 
-    @Setter private String incomingString;
-    @Setter private String outgoingString;
+    @Setter
+    private String incomingString;
+    @Setter
+    private String outgoingString;
 
-    @Setter private OcppJsonMessage incomingMessage;
-    @Setter private OcppJsonMessage outgoingMessage;
+    @Setter
+    private OcppJsonMessage incomingMessage;
+    @Setter
+    private OcppJsonMessage outgoingMessage;
 
-    @Setter private FutureResponseContext futureResponseContext;
+    @Setter
+    private FutureResponseContext futureResponseContext;
 
     // for incoming responses to previously sent requests
     private Consumer<OcppJsonResult> resultHandler;
@@ -60,17 +66,15 @@ public class CommunicationContext {
         return (outgoingMessage != null) && (outgoingMessage instanceof OcppJsonError);
     }
 
-    @SuppressWarnings("unchecked")
-    public void createResultHandler(CommunicationTask task) {
+    public void createResultHandler(CommunicationTask<?, ?> task) {
         // TODO: not so sure about this
         resultHandler = result -> task.getHandler(chargeBoxId)
                                       .handleResponse(new DummyResponse(result.getPayload()));
     }
 
-    public void createErrorHandler(CommunicationTask task) {
+    public void createErrorHandler(CommunicationTask<?, ?> task) {
         // TODO: not so sure about this
-        errorHandler = result -> task.defaultCallback()
-                                     .success(chargeBoxId, result);
+        errorHandler = result -> task.getCallbackList().forEach(c -> c.success(chargeBoxId, result));
     }
 
     @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -103,7 +107,7 @@ public class CommunicationContext {
         }
 
         @Override
-        public ResponseType get(long timeout, TimeUnit unit) {
+        public ResponseType get(long timeout, @NotNull TimeUnit unit) {
             return payload;
         }
     }
