@@ -33,7 +33,7 @@ import java.util.List;
  */
 @Getter
 @Setter
-public class MultipleChargePointSelect implements ChargePointSelection {
+public class MultipleChargePointSelect extends AbstractChargePointSelection {
 
     @NotNull(message = "Charge point selection is required")
     @Size(min = 1, message = "Please select at least {min} charge point")

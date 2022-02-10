@@ -39,14 +39,14 @@ import java.util.stream.Collectors;
 public class TaskStoreImpl implements TaskStore {
 
     private final AtomicInteger atomicInteger = new AtomicInteger(0);
-    private final ConcurrentHashMap<Integer, CommunicationTask> lookupTable = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Integer, CommunicationTask<?, ?>> lookupTable = new ConcurrentHashMap<>();
 
     @Override
     public List<TaskOverview> getOverview() {
         return lookupTable.entrySet()
                           .stream()
                           .map(entry -> {
-                              CommunicationTask r = entry.getValue();
+                              CommunicationTask<?, ?> r = entry.getValue();
                               return TaskOverview.builder()
                                                  .taskId(entry.getKey())
                                                  .origin(r.getOrigin())
@@ -61,8 +61,8 @@ public class TaskStoreImpl implements TaskStore {
     }
 
     @Override
-    public CommunicationTask get(Integer taskId) {
-        CommunicationTask r = lookupTable.get(taskId);
+    public CommunicationTask<?, ?> get(Integer taskId) {
+        CommunicationTask<?, ?> r = lookupTable.get(taskId);
         if (r == null) {
             throw new SteveException("There is no task with taskId '%s'", taskId);
         } else {
@@ -71,7 +71,7 @@ public class TaskStoreImpl implements TaskStore {
     }
 
     @Override
-    public Integer add(CommunicationTask task) {
+    public int add(CommunicationTask<?, ?> task) {
         int taskId = atomicInteger.incrementAndGet();
         lookupTable.put(taskId, task);
         return taskId;

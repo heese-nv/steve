@@ -24,8 +24,8 @@ public interface ChargePointServiceClient {
      * @param <RESPONSE>
      *         Type of response
      */
-    default <S extends ChargePointSelection, RESPONSE> void executeTask(@NotNull CommunicationTask<S, RESPONSE> task) {
-        executeTask(task, Collections.emptyList());
+    default <S extends ChargePointSelection, RESPONSE> int executeTask(@NotNull CommunicationTask<S, RESPONSE> task) {
+        return executeTask(task, Collections.emptyList());
     }
 
     /**
@@ -40,5 +40,5 @@ public interface ChargePointServiceClient {
      * @param <RESPONSE>
      *         Type of response
      */
-    <S extends ChargePointSelection, RESPONSE> void executeTask(@NotNull CommunicationTask<S, RESPONSE> task, @Nullable List<OcppCallback<RESPONSE>> callbacks);
+    <S extends ChargePointSelection, RESPONSE> int executeTask(@NotNull CommunicationTask<S, RESPONSE> task, @Nullable List<OcppCallback<RESPONSE>> callbacks);
 }

@@ -30,12 +30,24 @@ public class KafkaChargePointConsumerService {
         return reactiveKafkaConsumerTemplate
                 .receiveAutoAck()
                 // .delayElements(Duration.ofSeconds(2L)) // BACKPRESSURE
-                .doOnNext(consumerRecord -> log.info("received key={}, value={} from topic={}, offset={}",
-                        consumerRecord.key(),
-                        consumerRecord.value(),
-                        consumerRecord.topic(),
-                        consumerRecord.offset())
-                )
+//                .doOnNext(consumerRecord -> log.info("received key={}, value={} from topic={}, offset={}",
+//                        consumerRecord.key(),
+//                        consumerRecord.value(),
+//                        consumerRecord.topic(),
+//                        consumerRecord.offset())
+//                )
+                .doOnNext(consumerRecord -> {
+                    CloudEvent event = consumerRecord.value();
+                    if (eventHandler.accepts(event)) {
+                        log.info("RECV from topic={}, offset={}: id={}, type={}, source={}, data={} ",
+                                consumerRecord.topic(),
+                                consumerRecord.offset(),
+                                event.getId(),
+                                event.getType(),
+                                event.getSource(),
+                                event.getData() == null ? "null" : new String(event.getData().toBytes()));
+                    }
+                })
                 .map(ConsumerRecord::value)
                 .filter(eventHandler::accepts)
                 .doOnNext(eventHandler::handleEvent)

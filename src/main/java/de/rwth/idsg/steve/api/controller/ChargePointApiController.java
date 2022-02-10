@@ -49,7 +49,7 @@ public class ChargePointApiController {
         ChargePointOperationResponseContract response = ChargePointOperationResponseContract.builder()
                                                                                             .requestId(requestId)
                                                                                             .chargePointId(operation.getChargePointId())
-                                                                                            .status("OK")
+                                                                                            .status("success")
                                                                                             .build();
         return ResponseEntity.ok(response);
     }

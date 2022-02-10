@@ -66,10 +66,14 @@ public class KafkaChargePointProducerService {
     }
 
     public String send(@NotNull CloudEvent event) {
-        log.info("send to topic={}, {}={},", topic, event.getType(), event);
-
         reactiveKafkaProducerTemplate.send(topic, event)
-                                     .doOnSuccess(senderResult -> log.info("sent {} offset : {}", event, senderResult.recordMetadata().offset()))
+                                     .doOnSuccess(senderResult -> log.info("SENT topic={}, offset={}: id={}, type={}, source={}, data={} ",
+                                             topic,
+                                             senderResult.recordMetadata().offset(),
+                                             event.getId(),
+                                             event.getType(),
+                                             event.getSource(),
+                                             event.getData() == null ? "null" : new String(event.getData().toBytes())))
                                      .subscribe();
 
         return event.getId();

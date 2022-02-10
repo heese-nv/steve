@@ -18,7 +18,9 @@
  */
 package de.rwth.idsg.steve.web.dto.ocpp;
 
+import com.github.f4b6a3.uuid.UuidCreator;
 import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -27,5 +29,16 @@ import java.util.List;
  * @since 09.03.2018
  */
 public interface ChargePointSelection {
-    List<ChargePointSelect> getChargePointSelectList();
+
+    /**
+     * @return message ID sent to the charge point
+     */
+    default @NotNull String getMessageId() {
+        return UuidCreator.getTimeOrdered().toString();
+    }
+
+    /**
+     * @return list of infos for contacting charge points
+     */
+    @NotNull List<ChargePointSelect> getChargePointSelectList();
 }

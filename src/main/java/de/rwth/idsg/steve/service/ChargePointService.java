@@ -44,6 +44,18 @@ public class ChargePointService {
         this.client15 = client15;
         this.client16 = client16;
     }
+
+    public void clearCache(@NotNull ChargeBoxRecord chargeBox, @Nullable StatusResponseCallback... callbacks) {
+        OcppProtocol protocol = OcppProtocol.fromCompositeValue(chargeBox.getOcppProtocol());
+
+        ChargePointSelect chargePointSelect = new ChargePointSelect(protocol.getTransport(), chargeBox.getChargeBoxId(), chargeBox.getEndpointAddress());
+        MultipleChargePointSelect params = new MultipleChargePointSelect();
+        params.setChargePointSelectList(List.of(chargePointSelect));
+
+        ClearCacheTask task = new ClearCacheTask(protocol.getVersion(), params);
+        getClient(protocol.getVersion()).executeTask(task, Arrays.asList(callbacks));
+    }
+
     /**
      * Retrieve the record of the charge box identified by {@code id}.
      *
@@ -55,17 +67,6 @@ public class ChargePointService {
     public Optional<ChargeBoxRecord> findChargeBoxById(@NotNull String chargeBoxId) {
         ChargeBoxRecord record = repository.findByChargeBoxId(chargeBoxId);
         return record == null ? Optional.empty() : Optional.of(record);
-    }
-
-    public void clearCache(@NotNull ChargeBoxRecord chargeBox, @Nullable StatusResponseCallback... callbacks) {
-        OcppProtocol protocol = OcppProtocol.fromCompositeValue(chargeBox.getOcppProtocol());
-
-        ChargePointSelect chargePointSelect = new ChargePointSelect(protocol.getTransport(), chargeBox.getChargeBoxId(), chargeBox.getEndpointAddress());
-        MultipleChargePointSelect params = new MultipleChargePointSelect();
-        params.setChargePointSelectList(List.of(chargePointSelect));
-
-        ClearCacheTask task = new ClearCacheTask(protocol.getVersion(), params);
-        getClient(protocol.getVersion()).executeTask(task, Arrays.asList(callbacks));
     }
 
 

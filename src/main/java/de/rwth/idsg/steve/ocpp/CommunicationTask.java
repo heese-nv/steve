@@ -145,6 +145,13 @@ public abstract class CommunicationTask<S extends ChargePointSelection, RESPONSE
         }
     }
 
+    /**
+     * @return message ID assigned to this task; if none was set explicitly then a random UUID is generated (time-ordered with mac hash).
+     */
+    public @NotNull String getMessageId() {
+        return params.getMessageId();
+    }
+
     public RequestType getRequest() {
         switch (ocppVersion) {
             case V_12:

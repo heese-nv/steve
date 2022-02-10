@@ -20,7 +20,7 @@ public class ChargePointOperationResponseContract {
     @NotBlank
     private String chargePointId;
 
-    /** Type of operation */
+    /** Status of sending the operation */
     @NotBlank
     private String status;
 }

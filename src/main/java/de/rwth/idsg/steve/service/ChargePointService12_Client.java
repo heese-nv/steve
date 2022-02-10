@@ -65,64 +65,27 @@ public class ChargePointService12_Client implements ChargePointServiceClient {
     // -------------------------------------------------------------------------
 
     public int changeAvailability(ChangeAvailabilityParams params) {
-        ChangeAvailabilityTask task = new ChangeAvailabilityTask(getVersion(), params);
-
-        BackgroundService.with(executorService)
-                         .forEach(((CommunicationTask<?, ?>) task).getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().changeAvailability(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new ChangeAvailabilityTask(getVersion(), params));
     }
 
     public int changeConfiguration(ChangeConfigurationParams params) {
-        ChangeConfigurationTask task = new ChangeConfigurationTask(getVersion(), params);
-
-        BackgroundService.with(executorService)
-                         .forEach(task.getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().changeConfiguration(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new ChangeConfigurationTask(getVersion(), params));
     }
 
     public int clearCache(@NotNull MultipleChargePointSelect params) {
-        ClearCacheTask task = new ClearCacheTask(getVersion(), params);
-
-        executeTask(task);
-        BackgroundService.with(executorService)
-                         .forEach(task.getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().clearCache(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new ClearCacheTask(getVersion(), params));
     }
 
     public int getDiagnostics(GetDiagnosticsParams params) {
-        GetDiagnosticsTask task = new GetDiagnosticsTask(getVersion(), params);
-
-        BackgroundService.with(executorService)
-                         .forEach(task.getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().getDiagnostics(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new GetDiagnosticsTask(getVersion(), params));
     }
 
     public int reset(ResetParams params) {
-        ResetTask task = new ResetTask(getVersion(), params);
-
-        BackgroundService.with(executorService)
-                         .forEach(task.getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().reset(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new ResetTask(getVersion(), params));
     }
 
     public int updateFirmware(UpdateFirmwareParams params) {
-        UpdateFirmwareTask task = new UpdateFirmwareTask(getVersion(), params);
-
-        BackgroundService.with(executorService)
-                         .forEach(task.getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().updateFirmware(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new UpdateFirmwareTask(getVersion(), params));
     }
 
     // -------------------------------------------------------------------------
@@ -130,35 +93,15 @@ public class ChargePointService12_Client implements ChargePointServiceClient {
     // -------------------------------------------------------------------------
 
     public int remoteStartTransaction(RemoteStartTransactionParams params) {
-        RemoteStartTransactionTask task = new RemoteStartTransactionTask(getVersion(), params);
-
-        executeTask(task);
-
-        BackgroundService.with(executorService)
-                         .forFirst(task.getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().remoteStartTransaction(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new RemoteStartTransactionTask(getVersion(), params));
     }
 
     public int remoteStopTransaction(RemoteStopTransactionParams params) {
-        RemoteStopTransactionTask task = new RemoteStopTransactionTask(getVersion(), params);
-
-        BackgroundService.with(executorService)
-                         .forFirst(task.getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().remoteStopTransaction(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new RemoteStopTransactionTask(getVersion(), params));
     }
 
     public int unlockConnector(UnlockConnectorParams params) {
-        UnlockConnectorTask task = new UnlockConnectorTask(getVersion(), params);
-
-        BackgroundService.with(executorService)
-                         .forFirst(task.getParams().getChargePointSelectList())
-                         .execute(c -> getOcpp12Invoker().unlockConnector(c, task));
-
-        return taskStore.add(task);
+        return executeTask(new UnlockConnectorTask(getVersion(), params));
     }
 
     /**
@@ -171,8 +114,8 @@ public class ChargePointService12_Client implements ChargePointServiceClient {
      * @param <RESPONSE>
      *         Type of response
      */
-    public <S extends ChargePointSelection, RESPONSE> void executeTask(@NotNull CommunicationTask<S, RESPONSE> task) {
-        executeTask(task, Collections.emptyList());
+    public <S extends ChargePointSelection, RESPONSE> int executeTask(@NotNull CommunicationTask<S, RESPONSE> task) {
+        return executeTask(task, Collections.emptyList());
     }
 
     /**
@@ -187,34 +130,60 @@ public class ChargePointService12_Client implements ChargePointServiceClient {
      * @param <RESPONSE>
      *         Type of response
      */
-    public <S extends ChargePointSelection, RESPONSE> void executeTask(@NotNull CommunicationTask<S, RESPONSE> task, @Nullable List<OcppCallback<RESPONSE>> callbacks) {
+    public <S extends ChargePointSelection, RESPONSE> int executeTask(@NotNull CommunicationTask<S, RESPONSE> task, @Nullable List<OcppCallback<RESPONSE>> callbacks) {
         if (callbacks != null) {
             callbacks.forEach(task::addCallback);
         }
 
         Consumer<ChargePointSelect> consumer;
-        if (task instanceof ClearCacheTask) {
+        if (task instanceof ChangeAvailabilityTask) {
+            consumer = c -> getOcpp12Invoker().changeAvailability(c, (ChangeAvailabilityTask) task);
+
+        } else if (task instanceof ChangeConfigurationTask) {
+            consumer = c -> getOcpp12Invoker().changeConfiguration(c, (ChangeConfigurationTask) task);
+
+        } else if (task instanceof ClearCacheTask) {
             consumer = c -> getOcpp12Invoker().clearCache(c, (ClearCacheTask) task);
+
+        } else if (task instanceof GetDiagnosticsTask) {
+            consumer = c -> getOcpp12Invoker().getDiagnostics(c, (GetDiagnosticsTask) task);
+
+        } else if (task instanceof ResetTask) {
+            consumer = c -> getOcpp12Invoker().reset(c, (ResetTask) task);
+
+        } else if (task instanceof UpdateFirmwareTask) {
+            consumer = c -> getOcpp12Invoker().updateFirmware(c, (UpdateFirmwareTask) task);
+
+        } else if (task instanceof RemoteStartTransactionTask) {
+            consumer = c -> getOcpp12Invoker().remoteStartTransaction(c, (RemoteStartTransactionTask) task);
+
+        } else if (task instanceof RemoteStopTransactionTask) {
+            consumer = c -> getOcpp12Invoker().remoteStopTransaction(c, (RemoteStopTransactionTask) task);
+
+        } else if (task instanceof UnlockConnectorTask) {
+            consumer = c -> getOcpp12Invoker().unlockConnector(c, (UnlockConnectorTask) task);
+
         } else {
             throw new SteveException("Unsupported operation: " + task.getOperationName());
+
         }
 
-        executeTask(task, consumer);
+        return executeTask(task, consumer);
     }
 
     /**
      * Execute a task with the specified consumer.
      *
-     * @param task
-     *         task to be executed
      * @param <S>
      *         Type of the parameters of the communication task
-     * @param <RESPONSE>
-     *         Type of response
+     * @param task
+     *         task to be executed
+     * @return internal task ID
      */
-    protected <S extends ChargePointSelection, RESPONSE> void executeTask(@NotNull CommunicationTask<S, RESPONSE> task, @NotNull Consumer<ChargePointSelect> consumer) {
+    protected <S extends ChargePointSelection, RESPONSE> int executeTask(@NotNull CommunicationTask<S, RESPONSE> task, @NotNull Consumer<ChargePointSelect> consumer) {
         BackgroundService.with(executorService)
                          .forEach(task.getParams().getChargePointSelectList())
                          .execute(consumer);
+        return taskStore.add(task);
     }
 }

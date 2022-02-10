@@ -47,7 +47,7 @@ public class ChargePointServiceInvoker {
     /**
      * Just a wrapper to make try-catch block and exception handling stand out
      */
-    public void runPipeline(ChargePointSelect cps, CommunicationTask task) {
+    public void runPipeline(ChargePointSelect cps, CommunicationTask<?, ?> task) {
         String chargeBoxId = cps.getChargeBoxId();
         try {
             run(chargeBoxId, task);
@@ -61,7 +61,7 @@ public class ChargePointServiceInvoker {
     /**
      * Actual processing
      */
-    private void run(String chargeBoxId, CommunicationTask task) {
+    private void run(String chargeBoxId, CommunicationTask<?, ?> task) {
         RequestType request = task.getRequest();
 
         ActionResponsePair pair = typeStore.findActionResponse(request);
@@ -70,7 +70,7 @@ public class ChargePointServiceInvoker {
         }
 
         OcppJsonCall call = new OcppJsonCall();
-        call.setMessageId(UUID.randomUUID().toString());
+        call.setMessageId(task.getMessageId());
         call.setPayload(request);
         call.setAction(pair.getAction());
 

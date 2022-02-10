@@ -15,6 +15,7 @@
         <!-- Disable the Jooq logo in logs -->
         <!-- https://github.com/jOOQ/jOOQ/issues/4019 -->
         <AsyncLogger name="org.jooq.Constants" level="WARN"/>
+        <AsyncLogger name="org.jooq.tools" level="INFO"/> <!-- comment in for debugging DB queries -->
 
         <AsyncLogger name="org.apache.cxf" level="INFO"/>
         <AsyncLogger name="org.apache.kafka" level="INFO"/>
