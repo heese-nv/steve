@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-public class StatusResponse extends AbstractOperationResponse {
+public class StatusResponse extends ChargePointOperationResponse {
 
     /** Status received from the charge point. See OCPP specification for the valid status values of a specific task. */
     private String status;

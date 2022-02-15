@@ -59,7 +59,7 @@ public class ChangeAvailabilityTask extends CommunicationTask<ChangeAvailability
         return new ocpp.cp._2015._10.ChangeAvailabilityRequest()
                 .withConnectorId(params.getConnectorId())
                 .withType(ocpp.cp._2015._10.AvailabilityType.fromValue(params.getAvailType().value()));
-    }
+}
 
     @Override
     public AsyncHandler<ocpp.cp._2010._08.ChangeAvailabilityResponse> getOcpp12Handler(String chargeBoxId) {

@@ -1,5 +1,6 @@
 package de.rwth.idsg.steve.service.callback;
 
+import de.rwth.idsg.steve.mq.message.OperationRequest;
 import de.rwth.idsg.steve.mq.message.StatusResponse;
 import de.rwth.idsg.steve.ocpp.task.StatusResponseCallback;
 import lombok.Getter;
@@ -14,15 +15,16 @@ import org.springframework.context.ApplicationEventPublisher;
 @Getter
 public class StatusEventCallback extends ChargePointApplicationEventCallback implements StatusResponseCallback {
 
-    public StatusEventCallback(@NotNull ApplicationEventPublisher publisher, @NotNull String requestId) {
-        super(publisher, requestId);
+    public StatusEventCallback(@NotNull ApplicationEventPublisher publisher, @NotNull OperationRequest request) {
+        super(publisher, request);
     }
 
     @Override
-    public void success(String chargeBoxId, String status) {
+    public void success(String chargePointId, String status) {
         StatusResponse response = StatusResponse.builder()
-                                                .requestId(getRequestId())
-                                                .chargePointId(chargeBoxId)
+                                                .action(getRequest().getAction())
+                                                .messageId(getRequest().getMessageId())
+                                                .chargePointId(chargePointId)
                                                 .status(status)
                                                 .build();
         getPublisher().publishEvent(response);

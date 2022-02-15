@@ -26,18 +26,6 @@ public interface CloudEventMessageMapper {
      *
      * @param event
      *         cloud event
-     * @param clazz
-     *         expected class
-     * @return message instance
-     */
-    @NotNull <T> T fromEvent(@NotNull CloudEvent event, @NotNull Class<T> clazz);
-
-    /**
-     * Extract an message instance from a cloud event. If the payload of the cloud event is {@code null} then
-     * an unpopulated instance is returned.
-     *
-     * @param event
-     *         cloud event
      * @return message instance
      */
     @NotNull Object fromEvent(@NotNull CloudEvent event);

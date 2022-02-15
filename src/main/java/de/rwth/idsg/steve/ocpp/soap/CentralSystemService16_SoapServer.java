@@ -72,64 +72,64 @@ public class CentralSystemService16_SoapServer implements CentralSystemService {
     @Autowired private CentralSystemService16_Service service;
 
     public BootNotificationResponse bootNotificationWithTransport(BootNotificationRequest parameters,
-                                                                  String chargeBoxIdentity, OcppProtocol protocol) {
+                                                                  String callContextJson, OcppProtocol protocol) {
         if (protocol.getVersion() != OcppVersion.V_16) {
             throw new IllegalArgumentException("Unexpected OCPP version: " + protocol.getVersion());
         }
-        return service.bootNotification(parameters, chargeBoxIdentity, protocol);
+        return service.bootNotification(parameters, callContextJson, protocol);
     }
 
     @Override
-    public BootNotificationResponse bootNotification(BootNotificationRequest parameters, String chargeBoxIdentity) {
-        return this.bootNotificationWithTransport(parameters, chargeBoxIdentity, OcppProtocol.V_16_SOAP);
+    public BootNotificationResponse bootNotification(BootNotificationRequest parameters, String callContextJson) {
+        return this.bootNotificationWithTransport(parameters, callContextJson, OcppProtocol.V_16_SOAP);
     }
 
     @Override
     public FirmwareStatusNotificationResponse firmwareStatusNotification(FirmwareStatusNotificationRequest parameters,
-                                                                         String chargeBoxIdentity) {
-        return service.firmwareStatusNotification(parameters, chargeBoxIdentity);
+                                                                         String callContextJson) {
+        return service.firmwareStatusNotification(parameters, callContextJson);
     }
 
     @Override
     public StatusNotificationResponse statusNotification(StatusNotificationRequest parameters,
-                                                         String chargeBoxIdentity) {
-        return service.statusNotification(parameters, chargeBoxIdentity);
+                                                         String callContextJson) {
+        return service.statusNotification(parameters, callContextJson);
     }
 
     @Override
-    public MeterValuesResponse meterValues(MeterValuesRequest parameters, String chargeBoxIdentity) {
-        return service.meterValues(parameters, chargeBoxIdentity);
+    public MeterValuesResponse meterValues(MeterValuesRequest parameters, String callContextJson) {
+        return service.meterValues(parameters, callContextJson);
     }
 
     @Override
     public DiagnosticsStatusNotificationResponse diagnosticsStatusNotification(
-            DiagnosticsStatusNotificationRequest parameters, String chargeBoxIdentity) {
-        return service.diagnosticsStatusNotification(parameters, chargeBoxIdentity);
+            DiagnosticsStatusNotificationRequest parameters, String callContextJson) {
+        return service.diagnosticsStatusNotification(parameters, callContextJson);
     }
 
     @Override
-    public StartTransactionResponse startTransaction(StartTransactionRequest parameters, String chargeBoxIdentity) {
-        return service.startTransaction(parameters, chargeBoxIdentity);
+    public StartTransactionResponse startTransaction(StartTransactionRequest parameters, String callContextJson) {
+        return service.startTransaction(parameters, callContextJson);
     }
 
     @Override
-    public StopTransactionResponse stopTransaction(StopTransactionRequest parameters, String chargeBoxIdentity) {
-        return service.stopTransaction(parameters, chargeBoxIdentity);
+    public StopTransactionResponse stopTransaction(StopTransactionRequest parameters, String callContextJson) {
+        return service.stopTransaction(parameters, callContextJson);
     }
 
     @Override
-    public HeartbeatResponse heartbeat(HeartbeatRequest parameters, String chargeBoxIdentity) {
-        return service.heartbeat(parameters, chargeBoxIdentity);
+    public HeartbeatResponse heartbeat(HeartbeatRequest parameters, String callContextJson) {
+        return service.heartbeat(parameters, callContextJson);
     }
 
     @Override
-    public AuthorizeResponse authorize(AuthorizeRequest parameters, String chargeBoxIdentity) {
-        return service.authorize(parameters, chargeBoxIdentity);
+    public AuthorizeResponse authorize(AuthorizeRequest parameters, String callContextJson) {
+        return service.authorize(parameters, callContextJson);
     }
 
     @Override
-    public DataTransferResponse dataTransfer(DataTransferRequest parameters, String chargeBoxIdentity) {
-        return service.dataTransfer(parameters, chargeBoxIdentity);
+    public DataTransferResponse dataTransfer(DataTransferRequest parameters, String callContextJson) {
+        return service.dataTransfer(parameters, callContextJson);
     }
 
     // -------------------------------------------------------------------------
@@ -138,118 +138,118 @@ public class CentralSystemService16_SoapServer implements CentralSystemService {
 
     @Override
     public Response<StopTransactionResponse> stopTransactionAsync(StopTransactionRequest parameters,
-                                                                  String chargeBoxIdentity) {
+                                                                  String callContextJson) {
         return null;
     }
 
     @Override
-    public Future<?> stopTransactionAsync(StopTransactionRequest parameters, String chargeBoxIdentity,
+    public Future<?> stopTransactionAsync(StopTransactionRequest parameters, String callContextJson,
                                           AsyncHandler<StopTransactionResponse> asyncHandler) {
         return null;
     }
 
     @Override
     public Response<StatusNotificationResponse> statusNotificationAsync(StatusNotificationRequest parameters,
-                                                                        String chargeBoxIdentity) {
+                                                                        String callContextJson) {
         return null;
     }
 
     @Override
-    public Future<?> statusNotificationAsync(StatusNotificationRequest parameters, String chargeBoxIdentity,
+    public Future<?> statusNotificationAsync(StatusNotificationRequest parameters, String callContextJson,
                                              AsyncHandler<StatusNotificationResponse> asyncHandler) {
         return null;
     }
 
     @Override
-    public Response<AuthorizeResponse> authorizeAsync(AuthorizeRequest parameters, String chargeBoxIdentity) {
+    public Response<AuthorizeResponse> authorizeAsync(AuthorizeRequest parameters, String callContextJson) {
         return null;
     }
 
     @Override
-    public Future<?> authorizeAsync(AuthorizeRequest parameters, String chargeBoxIdentity,
+    public Future<?> authorizeAsync(AuthorizeRequest parameters, String callContextJson,
                                     AsyncHandler<AuthorizeResponse> asyncHandler) {
         return null;
     }
 
     @Override
     public Response<StartTransactionResponse> startTransactionAsync(StartTransactionRequest parameters,
-                                                                    String chargeBoxIdentity) {
+                                                                    String callContextJson) {
         return null;
     }
 
     @Override
-    public Future<?> startTransactionAsync(StartTransactionRequest parameters, String chargeBoxIdentity,
+    public Future<?> startTransactionAsync(StartTransactionRequest parameters, String callContextJson,
                                            AsyncHandler<StartTransactionResponse> asyncHandler) {
         return null;
     }
 
     @Override
     public Response<FirmwareStatusNotificationResponse> firmwareStatusNotificationAsync(
-            FirmwareStatusNotificationRequest parameters, String chargeBoxIdentity) {
+            FirmwareStatusNotificationRequest parameters, String callContextJson) {
         return null;
     }
 
     @Override
     public Future<?> firmwareStatusNotificationAsync(FirmwareStatusNotificationRequest parameters,
-                                                     String chargeBoxIdentity,
+                                                     String callContextJson,
                                                      AsyncHandler<FirmwareStatusNotificationResponse> asyncHandler) {
         return null;
     }
 
     @Override
     public Response<BootNotificationResponse> bootNotificationAsync(BootNotificationRequest parameters,
-                                                                    String chargeBoxIdentity) {
+                                                                    String callContextJson) {
         return null;
     }
 
     @Override
-    public Future<?> bootNotificationAsync(BootNotificationRequest parameters, String chargeBoxIdentity,
+    public Future<?> bootNotificationAsync(BootNotificationRequest parameters, String callContextJson,
                                            AsyncHandler<BootNotificationResponse> asyncHandler) {
         return null;
     }
 
     @Override
-    public Response<HeartbeatResponse> heartbeatAsync(HeartbeatRequest parameters, String chargeBoxIdentity) {
+    public Response<HeartbeatResponse> heartbeatAsync(HeartbeatRequest parameters, String callContextJson) {
         return null;
     }
 
     @Override
-    public Future<?> heartbeatAsync(HeartbeatRequest parameters, String chargeBoxIdentity,
+    public Future<?> heartbeatAsync(HeartbeatRequest parameters, String callContextJson,
                                     AsyncHandler<HeartbeatResponse> asyncHandler) {
         return null;
     }
 
     @Override
-    public Response<MeterValuesResponse> meterValuesAsync(MeterValuesRequest parameters, String chargeBoxIdentity) {
+    public Response<MeterValuesResponse> meterValuesAsync(MeterValuesRequest parameters, String callContextJson) {
         return null;
     }
 
     @Override
-    public Future<?> meterValuesAsync(MeterValuesRequest parameters, String chargeBoxIdentity,
+    public Future<?> meterValuesAsync(MeterValuesRequest parameters, String callContextJson,
                                       AsyncHandler<MeterValuesResponse> asyncHandler) {
         return null;
     }
 
     @Override
-    public Response<DataTransferResponse> dataTransferAsync(DataTransferRequest parameters, String chargeBoxIdentity) {
+    public Response<DataTransferResponse> dataTransferAsync(DataTransferRequest parameters, String callContextJson) {
         return null;
     }
 
     @Override
-    public Future<?> dataTransferAsync(DataTransferRequest parameters, String chargeBoxIdentity,
+    public Future<?> dataTransferAsync(DataTransferRequest parameters, String callContextJson,
                                        AsyncHandler<DataTransferResponse> asyncHandler) {
         return null;
     }
 
     @Override
     public Response<DiagnosticsStatusNotificationResponse> diagnosticsStatusNotificationAsync(
-            DiagnosticsStatusNotificationRequest parameters, String chargeBoxIdentity) {
+            DiagnosticsStatusNotificationRequest parameters, String callContextJson) {
         return null;
     }
 
     @Override
     public Future<?> diagnosticsStatusNotificationAsync(DiagnosticsStatusNotificationRequest parameters,
-                                                        String chargeBoxIdentity,
+                                                        String callContextJson,
                                                         AsyncHandler<DiagnosticsStatusNotificationResponse> asyncHandler) {
         return null;
     }

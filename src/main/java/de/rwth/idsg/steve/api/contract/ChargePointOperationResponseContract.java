@@ -14,7 +14,7 @@ public class ChargePointOperationResponseContract {
 
     /** Globally unique request ID */
     @NotBlank
-    private String requestId;
+    private String messageId;
 
     /** ID of the charge point that the operation is performed on */
     @NotBlank

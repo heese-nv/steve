@@ -1,23 +1,28 @@
 package de.rwth.idsg.steve.service;
 
 import de.rwth.idsg.steve.SteveException;
+import de.rwth.idsg.steve.mq.message.ChargePointOperationRequest;
 import de.rwth.idsg.steve.ocpp.OcppProtocol;
 import de.rwth.idsg.steve.ocpp.OcppVersion;
 import de.rwth.idsg.steve.ocpp.task.ClearCacheTask;
 import de.rwth.idsg.steve.ocpp.task.StatusResponseCallback;
 import de.rwth.idsg.steve.repository.ChargePointRepository;
 import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
+import de.rwth.idsg.steve.service.callback.StatusEventCallback;
 import de.rwth.idsg.steve.web.dto.ocpp.MultipleChargePointSelect;
 import jooq.steve.db.tables.records.ChargeBoxRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
+
+import static de.rwth.idsg.steve.mq.message.CentralServiceOperators.CLEAR_CACHE;
+import static de.rwth.idsg.steve.utils.ValidationUtils.requireNotBlank;
 
 /**
  * This service allows performing actions on a charge box without knowledge about communication protocol,
@@ -34,26 +39,54 @@ public class ChargePointService {
     private final ChargePointService12_Client client12;
     private final ChargePointService15_Client client15;
     private final ChargePointService16_Client client16;
+    private final ApplicationEventPublisher publisher;
 
     public ChargePointService(ChargePointRepository repository,
                               @Qualifier("ChargePointService12_Client") ChargePointService12_Client client12,
                               @Qualifier("ChargePointService15_Client") ChargePointService15_Client client15,
-                              @Qualifier("ChargePointService16_Client") ChargePointService16_Client client16) {
+                              @Qualifier("ChargePointService16_Client") ChargePointService16_Client client16,
+                              ApplicationEventPublisher publisher) {
         this.repository = repository;
         this.client12 = client12;
         this.client15 = client15;
         this.client16 = client16;
+        this.publisher = publisher;
     }
 
-    public void clearCache(@NotNull ChargeBoxRecord chargeBox, @Nullable StatusResponseCallback... callbacks) {
+    public void execute(ChargePointOperationRequest request) {
+        log.debug("Request {} at {}", request.getClass().getSimpleName(), request.getMessageId());
+
+        ChargeBoxRecord chargeBox = findChargeBoxById(request.getChargePointId())
+                .orElseThrow(() -> new SteveException("Unknown charge point ID: " + request.getChargePointId()));
+
         OcppProtocol protocol = OcppProtocol.fromCompositeValue(chargeBox.getOcppProtocol());
+        ChargePointSelect chargePoint = new ChargePointSelect(protocol.getTransport(), chargeBox.getChargeBoxId(), chargeBox.getEndpointAddress());
 
-        ChargePointSelect chargePointSelect = new ChargePointSelect(protocol.getTransport(), chargeBox.getChargeBoxId(), chargeBox.getEndpointAddress());
-        MultipleChargePointSelect params = new MultipleChargePointSelect();
-        params.setChargePointSelectList(List.of(chargePointSelect));
+        switch (request.getAction()) {
+            case CLEAR_CACHE:
+                clearCache(protocol, chargePoint, request);
+                return;
+        }
+    }
 
+    private void clearCache(@NotNull OcppProtocol protocol, @NotNull ChargePointSelect chargePoint, @NotNull ChargePointOperationRequest request) {
+        StatusResponseCallback callback = new StatusEventCallback(publisher, request);
+        MultipleChargePointSelect params = new MultipleChargePointSelect(request.getMessageId(), chargePoint);
         ClearCacheTask task = new ClearCacheTask(protocol.getVersion(), params);
-        getClient(protocol.getVersion()).executeTask(task, Arrays.asList(callbacks));
+        getClient(protocol.getVersion()).executeTask(task, List.of(callback));
+    }
+
+    /**
+     * Verify the existence of a charge point and apply the consumer.
+     *
+     * @param chargePointId
+     *         charge point ID
+     * @param consumer
+     *         consumer
+     */
+    protected void process(@NotNull String chargePointId, @NotNull Consumer<ChargeBoxRecord> consumer) {
+        requireNotBlank(chargePointId, "Non-blank charge point ID required");
+        findChargeBoxById(chargePointId).ifPresent(consumer);
     }
 
     /**

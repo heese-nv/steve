@@ -30,6 +30,7 @@ import de.rwth.idsg.steve.ocpp.ws.pipeline.Deserializer;
 import de.rwth.idsg.steve.ocpp.ws.pipeline.IncomingPipeline;
 import de.rwth.idsg.steve.ocpp.ws.pipeline.Serializer;
 import ocpp.cs._2010._08.*;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -56,7 +57,7 @@ public class Ocpp12WebSocketEndpoint extends AbstractWebSocketEndpoint {
     public void init() {
         Deserializer deserializer = new Deserializer(futureResponseContextStore, Ocpp12TypeStore.INSTANCE, publisher);
         Serializer serializer = new Serializer(publisher);
-        IncomingPipeline pipeline = new IncomingPipeline(serializer, deserializer, new Ocpp12CallHandler(server, publisher));
+        IncomingPipeline pipeline = new IncomingPipeline(serializer, deserializer, new Ocpp12CallHandler(server));
         super.init(pipeline);
     }
 
@@ -69,41 +70,41 @@ public class Ocpp12WebSocketEndpoint extends AbstractWebSocketEndpoint {
 
         private final CentralSystemService12_SoapServer server;
 
-        private Ocpp12CallHandler(CentralSystemService12_SoapServer server, ApplicationEventPublisher publisher) {
+        private Ocpp12CallHandler(CentralSystemService12_SoapServer server) {
             super();
             this.server = server;
         }
 
         @Override
-        protected ResponseType dispatch(RequestType params, String chargeBoxId) {
+        protected ResponseType dispatch(RequestType params, @NotNull String callContextJson) {
             ResponseType r;
 
             if (params instanceof BootNotificationRequest) {
-                r = server.bootNotificationWithTransport((BootNotificationRequest) params, chargeBoxId, OcppProtocol.V_12_JSON);
+                r = server.bootNotificationWithTransport((BootNotificationRequest) params, callContextJson, OcppProtocol.V_12_JSON);
 
             } else if (params instanceof FirmwareStatusNotificationRequest) {
-                r = server.firmwareStatusNotification((FirmwareStatusNotificationRequest) params, chargeBoxId);
+                r = server.firmwareStatusNotification((FirmwareStatusNotificationRequest) params, callContextJson);
 
             } else if (params instanceof StatusNotificationRequest) {
-                r = server.statusNotification((StatusNotificationRequest) params, chargeBoxId);
+                r = server.statusNotification((StatusNotificationRequest) params, callContextJson);
 
             } else if (params instanceof MeterValuesRequest) {
-                r = server.meterValues((MeterValuesRequest) params, chargeBoxId);
+                r = server.meterValues((MeterValuesRequest) params, callContextJson);
 
             } else if (params instanceof DiagnosticsStatusNotificationRequest) {
-                r = server.diagnosticsStatusNotification((DiagnosticsStatusNotificationRequest) params, chargeBoxId);
+                r = server.diagnosticsStatusNotification((DiagnosticsStatusNotificationRequest) params, callContextJson);
 
             } else if (params instanceof StartTransactionRequest) {
-                r = server.startTransaction((StartTransactionRequest) params, chargeBoxId);
+                r = server.startTransaction((StartTransactionRequest) params, callContextJson);
 
             } else if (params instanceof StopTransactionRequest) {
-                r = server.stopTransaction((StopTransactionRequest) params, chargeBoxId);
+                r = server.stopTransaction((StopTransactionRequest) params, callContextJson);
 
             } else if (params instanceof HeartbeatRequest) {
-                r = server.heartbeat((HeartbeatRequest) params, chargeBoxId);
+                r = server.heartbeat((HeartbeatRequest) params, callContextJson);
 
             } else if (params instanceof AuthorizeRequest) {
-                r = server.authorize((AuthorizeRequest) params, chargeBoxId);
+                r = server.authorize((AuthorizeRequest) params, callContextJson);
             } else {
                 throw new IllegalArgumentException("Unexpected RequestType, dispatch method not found");
             }

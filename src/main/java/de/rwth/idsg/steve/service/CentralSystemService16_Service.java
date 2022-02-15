@@ -18,8 +18,12 @@
  */
 package de.rwth.idsg.steve.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.rwth.idsg.steve.mq.message.ChargePointOperators;
 import de.rwth.idsg.steve.mq.message.HeartBeatEvent;
 import de.rwth.idsg.steve.ocpp.OcppProtocol;
+import de.rwth.idsg.steve.ocpp.ws.pipeline.CallContext;
 import de.rwth.idsg.steve.repository.OcppServerRepository;
 import de.rwth.idsg.steve.repository.SettingsRepository;
 import de.rwth.idsg.steve.repository.dto.InsertConnectorStatusParams;
@@ -50,15 +54,17 @@ public class CentralSystemService16_Service {
     private final OcppTagService ocppTagService;
     private final NotificationService notificationService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final ObjectMapper mapper;
     private ChargePointHelperService chargePointHelperService;
 
     public CentralSystemService16_Service(OcppServerRepository ocppServerRepository, SettingsRepository settingsRepository, OcppTagService ocppTagService,
-                                          NotificationService notificationService, ApplicationEventPublisher applicationEventPublisher) {
+                                          NotificationService notificationService, ApplicationEventPublisher applicationEventPublisher, ObjectMapper mapper) {
         this.ocppServerRepository = ocppServerRepository;
         this.settingsRepository = settingsRepository;
         this.ocppTagService = ocppTagService;
         this.notificationService = notificationService;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.mapper = mapper;
     }
 
     // There is a circular dependency between CentralSystemService16_Service and ChargePointHelperService. Autowiring via setting resolved this issue.
@@ -67,19 +73,19 @@ public class CentralSystemService16_Service {
         this.chargePointHelperService = chargePointHelperService;
     }
 
-    public BootNotificationResponse bootNotification(BootNotificationRequest parameters, String chargeBoxIdentity,
-                                                     OcppProtocol ocppProtocol) {
+    public BootNotificationResponse bootNotification(BootNotificationRequest parameters, String callContextJson, OcppProtocol ocppProtocol) {
+        CallContext context = CallContext.fromJson(callContextJson);
 
-        Optional<RegistrationStatus> status = chargePointHelperService.getRegistrationStatus(chargeBoxIdentity);
-        notificationService.ocppStationBooted(chargeBoxIdentity, status);
+        Optional<RegistrationStatus> status = chargePointHelperService.getRegistrationStatus(context.getChargeBoxId());
+        notificationService.ocppStationBooted(context.getChargeBoxId(), status);
         DateTime now = DateTime.now();
 
         if (status.isEmpty()) {
             // Applies only to stations not in db (regardless of the registration_status field from db)
-            log.error("The chargebox '{}' is NOT in database.", chargeBoxIdentity);
+            log.error("The chargebox '{}' is NOT in database.", context.getChargeBoxId());
         } else {
             // Applies to all stations in db (even with registration_status Rejected)
-            log.info("The boot of the chargebox '{}' with registration status '{}' is acknowledged.", chargeBoxIdentity, status);
+            log.info("The boot of the chargebox '{}' with registration status '{}' is acknowledged.", context.getChargeBoxId(), status);
             UpdateChargeboxParams params =
                     UpdateChargeboxParams.builder()
                                          .ocppProtocol(ocppProtocol)
@@ -92,7 +98,7 @@ public class CentralSystemService16_Service {
                                          .imsi(parameters.getImsi())
                                          .meterType(parameters.getMeterType())
                                          .meterSerial(parameters.getMeterSerialNumber())
-                                         .chargeBoxId(chargeBoxIdentity)
+                                         .chargeBoxId(context.getChargeBoxId())
                                          .heartbeatTimestamp(now)
                                          .build();
 
@@ -105,21 +111,23 @@ public class CentralSystemService16_Service {
                 .withInterval(settingsRepository.getHeartbeatIntervalInSeconds());
     }
 
-    public FirmwareStatusNotificationResponse firmwareStatusNotification(
-            FirmwareStatusNotificationRequest parameters, String chargeBoxIdentity) {
+    public FirmwareStatusNotificationResponse firmwareStatusNotification(FirmwareStatusNotificationRequest parameters, String callContextJson) {
+        CallContext context = CallContext.fromJson(callContextJson);
+
         String status = parameters.getStatus().value();
-        ocppServerRepository.updateChargeboxFirmwareStatus(chargeBoxIdentity, status);
+        ocppServerRepository.updateChargeboxFirmwareStatus(context.getChargeBoxId(), status);
         return new FirmwareStatusNotificationResponse();
     }
 
-    public StatusNotificationResponse statusNotification(
-            StatusNotificationRequest parameters, String chargeBoxIdentity) {
+    public StatusNotificationResponse statusNotification(StatusNotificationRequest parameters, String callContextJson) {
+        CallContext context = CallContext.fromJson(callContextJson);
+
         // Optional field
         DateTime timestamp = parameters.isSetTimestamp() ? parameters.getTimestamp() : DateTime.now();
 
         InsertConnectorStatusParams params =
                 InsertConnectorStatusParams.builder()
-                                           .chargeBoxId(chargeBoxIdentity)
+                                           .chargeBoxId(context.getChargeBoxId())
                                            .connectorId(parameters.getConnectorId())
                                            .status(parameters.getStatus().value())
                                            .errorCode(parameters.getErrorCode().value())
@@ -132,16 +140,17 @@ public class CentralSystemService16_Service {
         ocppServerRepository.insertConnectorStatus(params);
 
         if (parameters.getStatus() == ChargePointStatus.FAULTED) {
-            notificationService.ocppStationStatusFailure(
-                    chargeBoxIdentity, parameters.getConnectorId(), parameters.getErrorCode().value());
+            notificationService.ocppStationStatusFailure(context.getChargeBoxId(), parameters.getConnectorId(), parameters.getErrorCode().value());
         }
 
         return new StatusNotificationResponse();
     }
 
-    public MeterValuesResponse meterValues(MeterValuesRequest parameters, String chargeBoxIdentity) {
+    public MeterValuesResponse meterValues(MeterValuesRequest parameters, String callContextJson) {
+        CallContext context = CallContext.fromJson(callContextJson);
+
         ocppServerRepository.insertMeterValues(
-                chargeBoxIdentity,
+                context.getChargeBoxId(),
                 parameters.getMeterValue(),
                 parameters.getConnectorId(),
                 parameters.getTransactionId()
@@ -150,14 +159,17 @@ public class CentralSystemService16_Service {
         return new MeterValuesResponse();
     }
 
-    public DiagnosticsStatusNotificationResponse diagnosticsStatusNotification(
-            DiagnosticsStatusNotificationRequest parameters, String chargeBoxIdentity) {
+    public DiagnosticsStatusNotificationResponse diagnosticsStatusNotification(DiagnosticsStatusNotificationRequest parameters, String callContextJson) {
+        CallContext context = CallContext.fromJson(callContextJson);
+
         String status = parameters.getStatus().value();
-        ocppServerRepository.updateChargeboxDiagnosticsStatus(chargeBoxIdentity, status);
+        ocppServerRepository.updateChargeboxDiagnosticsStatus(context.getChargeBoxId(), status);
         return new DiagnosticsStatusNotificationResponse();
     }
 
-    public StartTransactionResponse startTransaction(StartTransactionRequest parameters, String chargeBoxIdentity) {
+    public StartTransactionResponse startTransaction(StartTransactionRequest parameters, String callContextJson) {
+        CallContext context = CallContext.fromJson(callContextJson);
+
         // Get the authorization info of the user, before making tx changes (will affectAuthorizationStatus)
         IdTagInfo info = ocppTagService.getIdTagInfo(
                 parameters.getIdTag(),
@@ -167,7 +179,7 @@ public class CentralSystemService16_Service {
 
         InsertTransactionParams params =
                 InsertTransactionParams.builder()
-                                       .chargeBoxId(chargeBoxIdentity)
+                                       .chargeBoxId(context.getChargeBoxId())
                                        .connectorId(parameters.getConnectorId())
                                        .idTag(parameters.getIdTag())
                                        .startTimestamp(parameters.getTimestamp())
@@ -185,7 +197,9 @@ public class CentralSystemService16_Service {
                 .withTransactionId(transactionId);
     }
 
-    public StopTransactionResponse stopTransaction(StopTransactionRequest parameters, String chargeBoxIdentity) {
+    public StopTransactionResponse stopTransaction(StopTransactionRequest parameters, String callContextJson) {
+        CallContext context = CallContext.fromJson(callContextJson);
+
         int transactionId = parameters.getTransactionId();
         String stopReason = parameters.isSetReason() ? parameters.getReason().value() : null;
 
@@ -198,7 +212,7 @@ public class CentralSystemService16_Service {
 
         UpdateTransactionParams params =
                 UpdateTransactionParams.builder()
-                                       .chargeBoxId(chargeBoxIdentity)
+                                       .chargeBoxId(context.getChargeBoxId())
                                        .transactionId(transactionId)
                                        .stopTimestamp(parameters.getTimestamp())
                                        .stopMeterValue(Integer.toString(parameters.getMeterStop()))
@@ -209,27 +223,40 @@ public class CentralSystemService16_Service {
 
         ocppServerRepository.updateTransaction(params);
 
-        ocppServerRepository.insertMeterValues(chargeBoxIdentity, parameters.getTransactionData(), transactionId);
+        ocppServerRepository.insertMeterValues(context.getChargeBoxId(), parameters.getTransactionData(), transactionId);
 
         notificationService.ocppTransactionEnded(params);
 
         return new StopTransactionResponse().withIdTagInfo(idTagInfo);
     }
 
-    public HeartbeatResponse heartbeat(HeartbeatRequest parameters, String chargeBoxIdentity) {
+    public HeartbeatResponse heartbeat(HeartbeatRequest parameters, String callContextJson) {
+        CallContext context = CallContext.fromJson(callContextJson);
         DateTime now = DateTime.now();
-        ocppServerRepository.updateChargeboxHeartbeat(chargeBoxIdentity, now);
+        ocppServerRepository.updateChargeboxHeartbeat(context.getChargeBoxId(), now);
 
         HeartBeatEvent event = HeartBeatEvent.builder()
-                                             .chargePointId(chargeBoxIdentity)
+                                             .action(ChargePointOperators.HEARTBEAT)
+                                             .chargePointId(context.getChargeBoxId())
+                                             .messageId(context.getMessageId())
                                              .timestamp(now)
                                              .build();
         applicationEventPublisher.publishEvent(event);
 
-        return new HeartbeatResponse().withCurrentTime(now);
+
+        HeartbeatResponse heartbeatResponse = new HeartbeatResponse().withCurrentTime(now);
+        try {
+            String json_event = mapper.writeValueAsString(event);
+            String json_result = mapper.writeValueAsString(heartbeatResponse);
+            log.debug(json_event);
+            log.debug(json_result);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        return heartbeatResponse;
     }
 
-    public AuthorizeResponse authorize(AuthorizeRequest parameters, String chargeBoxIdentity) {
+    public AuthorizeResponse authorize(AuthorizeRequest parameters, String callContextJson) {
         // Get the authorization info of the user
         IdTagInfo idTagInfo = ocppTagService.getIdTagInfo(
                 parameters.getIdTag(),
@@ -243,8 +270,10 @@ public class CentralSystemService16_Service {
     /**
      * Dummy implementation. This is new in OCPP 1.5. It must be vendor-specific.
      */
-    public DataTransferResponse dataTransfer(DataTransferRequest parameters, String chargeBoxIdentity) {
-        log.info("[Data Transfer] Charge point: {}, Vendor Id: {}", chargeBoxIdentity, parameters.getVendorId());
+    public DataTransferResponse dataTransfer(DataTransferRequest parameters, String callContextJson) {
+        CallContext context = CallContext.fromJson(callContextJson);
+
+        log.info("[Data Transfer] Charge point: {}, Vendor Id: {}", context.getChargeBoxId(), parameters.getVendorId());
         if (parameters.isSetMessageId()) {
             log.info("[Data Transfer] Message Id: {}", parameters.getMessageId());
         }

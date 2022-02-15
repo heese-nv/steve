@@ -14,11 +14,14 @@ import javax.validation.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ChargePointOperationContract {
 
+    /** Message ID to be used */
+    private String messageId;
+
     /** ID of the charge point that the operation is performed on */
     @NotBlank
     private String chargePointId;
 
-    /** Type of operation */
+    /** Action name of operation */
     @NotBlank
-    private String type;
+    private String action;
 }

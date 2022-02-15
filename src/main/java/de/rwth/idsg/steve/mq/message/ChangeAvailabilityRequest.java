@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-public class ChangeAvailabilityRequest extends AbstractOperationRequest {
+public class ChangeAvailabilityRequest extends ChargePointOperationRequest {
 
     /**
      * Valid values are listed in the property {@link AvailabilityType#value()}

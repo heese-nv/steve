@@ -1,7 +1,6 @@
 package de.rwth.idsg.steve.mq.kafka.service;
 
 import de.rwth.idsg.steve.mq.kafka.service.mapper.CloudEventMessageMapper;
-import de.rwth.idsg.steve.mq.message.ChargePointEvent;
 import de.rwth.idsg.steve.mq.message.OcppJsonMessageEvent;
 import de.rwth.idsg.steve.mq.message.OperationRequest;
 import de.rwth.idsg.steve.mq.message.OperationResponse;
@@ -41,17 +40,6 @@ public class KafkaChargePointProducerService {
      * @return message ID
      */
     public String send(@NotNull OperationRequest message) {
-        return send(messageConverter.toEvent(message));
-    }
-
-    /**
-     * Send the message to Kafka.
-     *
-     * @param message
-     *         message
-     * @return message ID
-     */
-    public String send(@NotNull ChargePointEvent message) {
         return send(messageConverter.toEvent(message));
     }
 

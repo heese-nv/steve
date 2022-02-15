@@ -10,6 +10,13 @@ public abstract class AbstractChargePointSelection implements ChargePointSelecti
 
     private String messageId;
 
+    public AbstractChargePointSelection() {
+    }
+
+    public AbstractChargePointSelection(@NotNull String messageId) {
+        this.messageId = messageId;
+    }
+
     @NotNull
     @Override
     public String getMessageId() {

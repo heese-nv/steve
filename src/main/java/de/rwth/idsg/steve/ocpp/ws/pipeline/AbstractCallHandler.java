@@ -25,6 +25,7 @@ import de.rwth.idsg.steve.ocpp.ws.data.CommunicationContext;
 import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonCall;
 import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonMessage;
 import de.rwth.idsg.steve.ocpp.ws.data.OcppJsonResult;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +45,13 @@ public abstract class AbstractCallHandler implements Consumer<CommunicationConte
         String messageId = call.getMessageId();
         OcppJsonMessage message;
         try {
-            ResponseType response;
-            response = dispatch(call.getPayload(), context.getChargeBoxId());
+            CallContext callContext = CallContext.builder()
+                                                 .chargeBoxId(context.getChargeBoxId())
+                                                 .messageId(messageId)
+                                                 .build();
+
+            // TODO Hack to get the message ID to the handler.
+            ResponseType response = dispatch(call.getPayload(), callContext.toJson());
             OcppJsonResult result = new OcppJsonResult();
             result.setPayload(response);
             result.setMessageId(messageId);
@@ -58,5 +64,5 @@ public abstract class AbstractCallHandler implements Consumer<CommunicationConte
         context.setOutgoingMessage(message);
     }
 
-    protected abstract ResponseType dispatch(RequestType params, String chargeBoxId);
+    protected abstract ResponseType dispatch(RequestType params, @NotNull String callContextJson);
 }
