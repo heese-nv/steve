@@ -18,6 +18,7 @@
  */
 package de.rwth.idsg.steve.web.dto.ocpp;
 
+import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,6 +38,13 @@ public class ChangeAvailabilityParams extends MultipleChargePointSelect {
 
     @NotNull(message = "Availability Type is required")
     @Setter private AvailabilityType availType;
+
+    public ChangeAvailabilityParams() {
+    }
+
+    public ChangeAvailabilityParams(@org.jetbrains.annotations.NotNull String messageId, ChargePointSelect chargePoint) {
+        super(messageId, chargePoint);
+    }
 
     /**
      * if empty, 0 = charge point as a whole

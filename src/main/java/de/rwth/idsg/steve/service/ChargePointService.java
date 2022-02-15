@@ -1,14 +1,17 @@
 package de.rwth.idsg.steve.service;
 
 import de.rwth.idsg.steve.SteveException;
+import de.rwth.idsg.steve.mq.message.ChangeAvailabilityRequest;
 import de.rwth.idsg.steve.mq.message.ChargePointOperationRequest;
 import de.rwth.idsg.steve.ocpp.OcppProtocol;
 import de.rwth.idsg.steve.ocpp.OcppVersion;
+import de.rwth.idsg.steve.ocpp.task.ChangeAvailabilityTask;
 import de.rwth.idsg.steve.ocpp.task.ClearCacheTask;
-import de.rwth.idsg.steve.ocpp.task.StatusResponseCallback;
 import de.rwth.idsg.steve.repository.ChargePointRepository;
 import de.rwth.idsg.steve.repository.dto.ChargePointSelect;
 import de.rwth.idsg.steve.service.callback.StatusEventCallback;
+import de.rwth.idsg.steve.web.dto.ocpp.AvailabilityType;
+import de.rwth.idsg.steve.web.dto.ocpp.ChangeAvailabilityParams;
 import de.rwth.idsg.steve.web.dto.ocpp.MultipleChargePointSelect;
 import jooq.steve.db.tables.records.ChargeBoxRecord;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static de.rwth.idsg.steve.mq.message.CentralServiceOperators.CHANGE_AVAILABILITY;
 import static de.rwth.idsg.steve.mq.message.CentralServiceOperators.CLEAR_CACHE;
 import static de.rwth.idsg.steve.utils.ValidationUtils.requireNotBlank;
 
@@ -63,15 +67,30 @@ public class ChargePointService {
         ChargePointSelect chargePoint = new ChargePointSelect(protocol.getTransport(), chargeBox.getChargeBoxId(), chargeBox.getEndpointAddress());
 
         switch (request.getAction()) {
+            case CHANGE_AVAILABILITY:
+                changeAvailability(protocol, chargePoint, (ChangeAvailabilityRequest) request, new StatusEventCallback(publisher, request));
+                break;
             case CLEAR_CACHE:
-                clearCache(protocol, chargePoint, request);
-                return;
+                clearCache(protocol, chargePoint, request, new StatusEventCallback(publisher, request));
+                break;
+
         }
     }
 
-    private void clearCache(@NotNull OcppProtocol protocol, @NotNull ChargePointSelect chargePoint, @NotNull ChargePointOperationRequest request) {
-        StatusResponseCallback callback = new StatusEventCallback(publisher, request);
+    private void changeAvailability(@NotNull OcppProtocol protocol, @NotNull ChargePointSelect chargePoint, @NotNull ChangeAvailabilityRequest request,
+                                    @NotNull StatusEventCallback callback) {
+        ChangeAvailabilityParams params = new ChangeAvailabilityParams(request.getMessageId(), chargePoint);
+        params.setConnectorId(request.getConnectorId());
+        params.setAvailType(AvailabilityType.fromValue(request.getAvailabilityType()));
+
+        ChangeAvailabilityTask task = new ChangeAvailabilityTask(protocol.getVersion(), params);
+        getClient(protocol.getVersion()).executeTask(task, List.of(callback));
+    }
+
+    private void clearCache(@NotNull OcppProtocol protocol, @NotNull ChargePointSelect chargePoint, @NotNull ChargePointOperationRequest request,
+                            @NotNull StatusEventCallback callback) {
         MultipleChargePointSelect params = new MultipleChargePointSelect(request.getMessageId(), chargePoint);
+
         ClearCacheTask task = new ClearCacheTask(protocol.getVersion(), params);
         getClient(protocol.getVersion()).executeTask(task, List.of(callback));
     }

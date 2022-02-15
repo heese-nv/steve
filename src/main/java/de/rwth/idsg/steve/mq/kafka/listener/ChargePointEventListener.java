@@ -1,8 +1,9 @@
 package de.rwth.idsg.steve.mq.kafka.listener;
 
 import de.rwth.idsg.steve.mq.kafka.service.KafkaChargePointProducerService;
+import de.rwth.idsg.steve.mq.message.CentralServiceOperators;
 import de.rwth.idsg.steve.mq.message.ChargePointOperationRequest;
-import de.rwth.idsg.steve.mq.message.HeartBeatEvent;
+import de.rwth.idsg.steve.mq.message.ChargePointOperators;
 import de.rwth.idsg.steve.mq.message.StatusResponse;
 import de.rwth.idsg.steve.service.ChargePointService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,26 +28,20 @@ public class ChargePointEventListener {
     }
 
     @EventListener
-    public void processClearCache(@NotNull ChargePointOperationRequest request) {
-        log.debug("Clear cache at " + request.getMessageId());
-        chargePointService.execute(request);
-    }
-
-    //
-    // Events received from the charge point
-    //
-
-    @EventListener
-    public void handleHeartBeatEvent(@NotNull HeartBeatEvent event) {
-        log.debug("Received Heartbeat from {}", event.getChargePointId());
-
-        producerService.send(event);
+    public void processOperationRequest(@NotNull ChargePointOperationRequest request) {
+        String action = request.getAction();
+        if (CentralServiceOperators.values().contains(action)) {
+            log.debug("Central Service send request to {}", request.getMessageId());
+            chargePointService.execute(request);
+        } else if (ChargePointOperators.values().contains(action)) {
+            log.debug("Charge point {} send request to Central Service", request.getMessageId());
+            producerService.send(request);
+        }
     }
 
     @EventListener
     public void handleStatusResponseEvent(@NotNull StatusResponse event) {
         log.debug("Received Status from {}", event.getChargePointId());
-
         producerService.send(event);
     }
 }

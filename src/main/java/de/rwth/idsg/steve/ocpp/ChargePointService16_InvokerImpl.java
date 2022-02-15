@@ -218,7 +218,7 @@ public class ChargePointService16_InvokerImpl implements ChargePointService16_In
         }
     }
 
-    private void runPipeline(ChargePointSelect cp, CommunicationTask task) {
+    private void runPipeline(ChargePointSelect cp, CommunicationTask<?, ?> task) {
         wsHelper.runPipeline(cp, task);
     }
 

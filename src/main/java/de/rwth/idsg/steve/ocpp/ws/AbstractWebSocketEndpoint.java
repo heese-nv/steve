@@ -89,7 +89,7 @@ public abstract class AbstractWebSocketEndpoint extends ConcurrentWebSocketHandl
         }
     }
 
-    private void handleTextMessage(WebSocketSession session, TextMessage webSocketMessage) throws Exception {
+    private void handleTextMessage(WebSocketSession session, TextMessage webSocketMessage) {
         String incomingString = webSocketMessage.getPayload();
         String chargeBoxId = getChargeBoxId(session);
 
@@ -113,14 +113,14 @@ public abstract class AbstractWebSocketEndpoint extends ConcurrentWebSocketHandl
     }
 
     @Override
-    public void onOpen(WebSocketSession session) throws Exception {
+    public void onOpen(WebSocketSession session) {
         String chargeBoxId = getChargeBoxId(session);
 
         WebSocketLogger.connected(chargeBoxId, session);
 
         // Just to keep the connection alive, such that the servers do not close
         // the connection because of a idle timeout, we ping-pong at fixed intervals.
-        ScheduledFuture pingSchedule = service.scheduleAtFixedRate(
+        ScheduledFuture<?> pingSchedule = service.scheduleAtFixedRate(
                 new PingTask(chargeBoxId, session),
                 WebSocketConfiguration.PING_INTERVAL,
                 WebSocketConfiguration.PING_INTERVAL,
@@ -143,7 +143,7 @@ public abstract class AbstractWebSocketEndpoint extends ConcurrentWebSocketHandl
     }
 
     @Override
-    public void onClose(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+    public void onClose(WebSocketSession session, CloseStatus closeStatus) {
         String chargeBoxId = getChargeBoxId(session);
 
         WebSocketLogger.closed(chargeBoxId, session, closeStatus);
@@ -165,7 +165,7 @@ public abstract class AbstractWebSocketEndpoint extends ConcurrentWebSocketHandl
     }
 
     @Override
-    public void onError(WebSocketSession session, Throwable throwable) throws Exception {
+    public void onError(WebSocketSession session, Throwable throwable) {
         WebSocketLogger.transportError(getChargeBoxId(session), session, throwable);
     }
 

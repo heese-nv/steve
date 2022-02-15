@@ -21,7 +21,8 @@ package de.rwth.idsg.steve.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.rwth.idsg.steve.mq.message.ChargePointOperators;
-import de.rwth.idsg.steve.mq.message.HeartBeatEvent;
+import de.rwth.idsg.steve.mq.message.HeartbeatEvent;
+import de.rwth.idsg.steve.mq.message.StatusNotificationEvent;
 import de.rwth.idsg.steve.ocpp.OcppProtocol;
 import de.rwth.idsg.steve.ocpp.ws.pipeline.CallContext;
 import de.rwth.idsg.steve.repository.OcppServerRepository;
@@ -125,6 +126,7 @@ public class CentralSystemService16_Service {
         // Optional field
         DateTime timestamp = parameters.isSetTimestamp() ? parameters.getTimestamp() : DateTime.now();
 
+
         InsertConnectorStatusParams params =
                 InsertConnectorStatusParams.builder()
                                            .chargeBoxId(context.getChargeBoxId())
@@ -136,6 +138,20 @@ public class CentralSystemService16_Service {
                                            .vendorId(parameters.getVendorId())
                                            .vendorErrorCode(parameters.getVendorErrorCode())
                                            .build();
+
+        StatusNotificationEvent event = StatusNotificationEvent.builder()
+                                                               .messageId(context.getMessageId())
+                                                               .action(ChargePointOperators.STATUS_NOTIFICATION)
+                                                               .chargePointId(params.getChargeBoxId())
+                                                               .connectorId(params.getConnectorId())
+                                                               .status(params.getStatus())
+                                                               .errorCode(params.getErrorCode())
+                                                               .timestamp(params.getTimestamp())
+                                                               .errorInfo(params.getErrorInfo())
+                                                               .vendorId(params.getVendorId())
+                                                               .vendorErrorCode(params.getVendorErrorCode())
+                                                               .build();
+        applicationEventPublisher.publishEvent(event); // publish before DB update so that exceptions won't affect the event
 
         ocppServerRepository.insertConnectorStatus(params);
 
@@ -233,16 +249,16 @@ public class CentralSystemService16_Service {
     public HeartbeatResponse heartbeat(HeartbeatRequest parameters, String callContextJson) {
         CallContext context = CallContext.fromJson(callContextJson);
         DateTime now = DateTime.now();
-        ocppServerRepository.updateChargeboxHeartbeat(context.getChargeBoxId(), now);
 
-        HeartBeatEvent event = HeartBeatEvent.builder()
+        HeartbeatEvent event = HeartbeatEvent.builder()
+                                             .messageId(context.getMessageId())
                                              .action(ChargePointOperators.HEARTBEAT)
                                              .chargePointId(context.getChargeBoxId())
-                                             .messageId(context.getMessageId())
                                              .timestamp(now)
                                              .build();
-        applicationEventPublisher.publishEvent(event);
+        applicationEventPublisher.publishEvent(event); // publish before DB update so that exceptions won't affect the event
 
+        ocppServerRepository.updateChargeboxHeartbeat(context.getChargeBoxId(), now);
 
         HeartbeatResponse heartbeatResponse = new HeartbeatResponse().withCurrentTime(now);
         try {

@@ -13,7 +13,14 @@ import org.joda.time.DateTime;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-public class HeartBeatEvent extends ChargePointOperationRequest {
+public class StatusNotificationEvent extends ChargePointOperationRequest {
+    private String errorCode;
+    private String errorInfo;
+
+    private String status;
 
     private DateTime timestamp;
+
+    private String vendorId;
+    private String vendorErrorCode;
 }

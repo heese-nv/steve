@@ -6,9 +6,14 @@ import de.rwth.idsg.steve.SteveException;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 /**
  * @author ralf.heese
@@ -44,5 +49,35 @@ public class ClassUtils {
             String message = String.format("Error while listing all classes in %s implementing the interface %s", packageName, interfaceClass.getName());
             throw new SteveException(message, e);
         }
+    }
+
+    /**
+     * @param clazz
+     *         class
+     * @return all values of static members
+     */
+    public static <T> Set<String> getValuesOfStaticStrings(Class<T> clazz) {
+        Set<String> values = new HashSet<>();
+        Field[] arr = clazz.getFields();
+
+        for (Field field : arr) {
+            if (isPublicStaticFinal(field) && field.getType().equals(String.class)) {
+                try {
+                    String value = (String) field.get(null);  // get value of each field
+                    if (isNotBlank(value)) {
+                        values.add(value);
+                    }
+                } catch (IllegalAccessException ignored) {
+                }
+            }
+
+        }
+
+        return values;
+    }
+
+    private static boolean isPublicStaticFinal(@NotNull Field field) {
+        int modifiers = field.getModifiers();
+        return (Modifier.isPublic(modifiers) && Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers));
     }
 }
