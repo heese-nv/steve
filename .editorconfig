@@ -46,6 +46,7 @@ indent_size = 2
 ij_haml_keep_indents_on_empty_lines = false
 
 [*.java]
+ij_continuation_indent_size = 4
 ij_java_align_consecutive_assignments = false
 ij_java_align_consecutive_variable_declarations = false
 ij_java_align_group_field_declarations = false
@@ -77,7 +78,7 @@ ij_java_assignment_wrap = off
 ij_java_binary_operation_sign_on_next_line = false
 ij_java_binary_operation_wrap = off
 ij_java_blank_lines_after_anonymous_class_header = 0
-ij_java_blank_lines_after_class_header = 0
+ij_java_blank_lines_after_class_header = 1
 ij_java_blank_lines_after_imports = 1
 ij_java_blank_lines_after_package = 1
 ij_java_blank_lines_around_class = 1
@@ -149,7 +150,7 @@ ij_java_imports_layout = *,|,javax.**,java.**,|,$*
 ij_java_indent_case_from_switch = true
 ij_java_insert_inner_class_imports = false
 ij_java_insert_override_annotation = true
-ij_java_keep_blank_lines_before_right_brace = 2
+ij_java_keep_blank_lines_before_right_brace = 0
 ij_java_keep_blank_lines_between_package_declaration_and_header = 2
 ij_java_keep_blank_lines_in_code = 2
 ij_java_keep_blank_lines_in_declarations = 2

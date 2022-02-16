@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * @author ralf.heese
@@ -29,4 +30,8 @@ public class ChargePointOperationRequest implements OperationRequest {
 
     /** ID of the connector (supposed to be greater than 0) */
     private Integer connectorId;
+
+    public ChargePointOperationRequest(@NotNull String action) {
+        this.action = action;
+    }
 }

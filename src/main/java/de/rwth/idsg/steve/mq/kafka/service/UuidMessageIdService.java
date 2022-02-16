@@ -10,22 +10,11 @@ import java.util.UUID;
  */
 public class UuidMessageIdService implements MessageIdService {
 
-    /** Unique node identifier */
-    private final long nodeId;
-
-    /**
-     * @param nodeId
-     *         value identifying uniquely the node.
-     */
-    public UuidMessageIdService(long nodeId) {
-        this.nodeId = nodeId;
-    }
-
     /**
      * @return time-ordered UUID with a node identifier
      */
     @Override
     public @NotNull UUID next() {
-        return UuidCreator.getTimeOrdered(null, null, nodeId);
+        return UuidCreator.getTimeOrdered();
     }
 }

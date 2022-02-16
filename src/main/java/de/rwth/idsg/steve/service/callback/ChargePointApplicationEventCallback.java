@@ -35,11 +35,11 @@ public class ChargePointApplicationEventCallback {
                                                                         .messageId(getRequest().getMessageId())
                                                                         .chargePointId(chargePointId);
         if (error != null) {
-            builder.code(error.getErrorCode())
+            builder.code(error.getErrorCode().toString())
                    .description(error.getErrorDescription())
                    .details(error.getErrorDetails());
         } else {
-            builder.code(ErrorCode.GenericError);
+            builder.code(ErrorCode.GenericError.toString());
         }
 
         getPublisher().publishEvent(builder.build());
@@ -50,7 +50,7 @@ public class ChargePointApplicationEventCallback {
                                                                         .action(getRequest().getAction())
                                                                         .messageId(getRequest().getMessageId())
                                                                         .chargePointId(chargeBoxId)
-                                                                        .code(ErrorCode.GenericError);
+                                                                        .code(ErrorCode.GenericError.toString());
         if (e != null) {
             builder.description(e.getMessage());
         }

@@ -36,7 +36,7 @@ public class CloudEventMessageMapperImpl implements CloudEventMessageMapper {
     public CloudEventMessageMapperImpl(MessageIdService idGenerator,
                                        MessageTypeMapper typeMapper,
                                        @Qualifier("kafkaProducerId") URI producerId,
-                                       ObjectMapper mapper) {
+                                       @Qualifier("KafkaObjectMapper") ObjectMapper mapper) {
         this.idGenerator = idGenerator;
         this.typeMapper = typeMapper;
         this.producerId = producerId;

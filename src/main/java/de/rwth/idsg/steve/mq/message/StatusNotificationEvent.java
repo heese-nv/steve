@@ -12,7 +12,6 @@ import org.joda.time.DateTime;
 @Getter
 @Setter
 @SuperBuilder
-@NoArgsConstructor
 public class StatusNotificationEvent extends ChargePointOperationRequest {
     private String errorCode;
     private String errorInfo;

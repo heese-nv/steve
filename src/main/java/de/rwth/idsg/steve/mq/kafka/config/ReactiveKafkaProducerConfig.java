@@ -14,7 +14,6 @@ import org.springframework.kafka.core.reactive.ReactiveKafkaProducerTemplate;
 import reactor.kafka.sender.SenderOptions;
 
 import java.net.URI;
-import java.util.Random;
 
 import static de.rwth.idsg.steve.mq.kafka.config.CustomKafkaProperties.MESSAGE_NAMESPACE;
 import static de.rwth.idsg.steve.mq.kafka.config.CustomKafkaProperties.PRODUCER_NODE_ID;
@@ -23,7 +22,7 @@ import static de.rwth.idsg.steve.mq.kafka.config.CustomKafkaProperties.PRODUCER_
 @Import(KafkaConfiguration.class)
 public class ReactiveKafkaProducerConfig {
 
-    private static final String DEFAULT_NODE_ID = "0";
+    private static final String DEFAULT_NODE_ID = "cDF595daK5YJTpTR7szD";
     private static final String DEFAULT_NAMESPACE = "de.rwth.idsg.steve.mq.message";
 
     @Bean
@@ -36,15 +35,10 @@ public class ReactiveKafkaProducerConfig {
         return URI.create(String.format("urn:%s", properties.buildConsumerProperties().getOrDefault(PRODUCER_NODE_ID, DEFAULT_NODE_ID)));
     }
 
+    @SuppressWarnings("unused")
     @Bean
     public MessageIdService getMessageIdGenerator(KafkaProperties properties) {
-        long nodeId = Long.parseLong(properties.getProperties().getOrDefault(PRODUCER_NODE_ID, DEFAULT_NODE_ID));
-        if (nodeId == 0) {
-            Random r = new Random();
-            nodeId = r.nextLong();
-        }
-
-        return new UuidMessageIdService(nodeId);
+        return new UuidMessageIdService();
     }
 
     @SuppressWarnings("unused")

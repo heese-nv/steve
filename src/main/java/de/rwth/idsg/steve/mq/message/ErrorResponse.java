@@ -15,8 +15,8 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 public class ErrorResponse extends ChargePointOperationResponse {
 
-    /** Error code provided by the charge point */
-    private ErrorCode code;
+    /** Error code provided by the charge point (see {@link ErrorCode} */
+    private String code;
 
     /** Error description provided by the charge point */
     private String description;
